@@ -1,0 +1,1048 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Motion Lab — AI.ConnectionsInc</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=DM+Mono:ital,wght@0,300;0,400;0,500&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+html,body{width:100%;height:100%;overflow:hidden;font-family:'Space Grotesk',sans-serif;background:#030309;color:#f0f2ff;cursor:none;}
+
+/* ── Cursor ── */
+#cdot{position:fixed;width:5px;height:5px;border-radius:50%;background:#fff;pointer-events:none;z-index:9999;transform:translate(-50%,-50%);}
+#cring{position:fixed;width:36px;height:36px;border:1px solid rgba(255,255,255,0.28);border-radius:50%;pointer-events:none;z-index:9998;transform:translate(-50%,-50%);transition:width .22s,height .22s,border-color .22s;}
+#cring.xl{width:56px;height:56px;}
+
+/* ── Nav ── */
+nav{
+  position:fixed;top:0;left:0;right:0;z-index:200;height:58px;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 40px;border-bottom:1px solid rgba(255,255,255,0.06);
+  background:rgba(3,3,9,0.85);backdrop-filter:blur(24px);
+}
+.nav-logo{font-size:.9rem;font-weight:700;letter-spacing:-.2px;opacity:.9;}
+.nav-logo em{font-style:normal;color:#4d96ff;}
+.nav-center{
+  font-family:'DM Mono',monospace;font-size:.65rem;letter-spacing:3px;
+  text-transform:uppercase;color:rgba(255,255,255,0.3);
+}
+.nav-right{display:flex;align-items:center;gap:24px;}
+.nav-right a{color:rgba(255,255,255,0.35);text-decoration:none;font-size:.75rem;font-weight:500;letter-spacing:.5px;transition:color .2s;}
+.nav-right a:hover{color:rgba(255,255,255,0.8);}
+.nav-right .nav-badge{
+  background:rgba(77,150,255,0.12);border:1px solid rgba(77,150,255,0.3);
+  color:#4d96ff;padding:6px 16px;font-size:.7rem;font-weight:700;letter-spacing:1px;
+  text-transform:uppercase;text-decoration:none;transition:all .25s;
+}
+.nav-badge:hover{background:rgba(77,150,255,0.22)!important;color:#4d96ff!important;}
+
+/* ── Side dots nav ── */
+.sdots{
+  position:fixed;right:24px;top:50%;transform:translateY(-50%);
+  z-index:200;display:flex;flex-direction:column;gap:14px;
+}
+.sdot{
+  width:8px;height:8px;border-radius:50%;
+  border:1px solid rgba(255,255,255,0.25);background:transparent;
+  cursor:pointer;transition:all .3s;position:relative;
+}
+.sdot::before{
+  content:attr(data-label);
+  position:absolute;right:20px;top:50%;transform:translateY(-50%);
+  font-family:'DM Mono',monospace;font-size:.62rem;letter-spacing:1px;
+  color:rgba(255,255,255,0.4);white-space:nowrap;
+  opacity:0;transition:opacity .2s;pointer-events:none;
+}
+.sdots:hover .sdot::before{opacity:1;}
+.sdot.active{background:currentColor;border-color:currentColor;transform:scale(1.4);}
+.sdot:nth-child(1){color:#4d96ff;}
+.sdot:nth-child(2){color:#a78bfa;}
+.sdot:nth-child(3){color:#06b6d4;}
+.sdot:nth-child(4){color:#6bcb77;}
+
+/* ── Gallery (scroll snap container) ── */
+.gallery{
+  position:fixed;inset:0;top:58px;
+  overflow-y:scroll;scroll-snap-type:y mandatory;
+  scrollbar-width:none;
+}
+.gallery::-webkit-scrollbar{display:none;}
+
+/* ── Each Exhibit ── */
+.exhibit{
+  height:calc(100vh - 58px);
+  scroll-snap-align:start;
+  position:relative;overflow:hidden;
+}
+.ex-canvas{
+  position:absolute;inset:0;
+  width:100%;height:100%;display:block;
+}
+
+/* ── Info panel ── */
+.info-panel{
+  position:absolute;z-index:10;
+  width:300px;
+  background:rgba(255,255,255,0.04);
+  border:1px solid rgba(255,255,255,0.09);
+  backdrop-filter:blur(32px) saturate(150%);
+  padding:32px 28px;
+  pointer-events:none;
+}
+.info-panel::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:1px;
+  background:linear-gradient(to right,transparent,rgba(255,255,255,0.2),transparent);
+}
+/* Panel positions vary per exhibit */
+.ip-right{right:48px;top:50%;transform:translateY(-50%);}
+.ip-left{left:48px;top:50%;transform:translateY(-50%);}
+.ip-tr{right:48px;top:80px;}
+.ip-br{right:48px;bottom:80px;}
+
+.ip-num{
+  font-family:'DM Mono',monospace;font-size:.6rem;letter-spacing:3px;
+  text-transform:uppercase;opacity:.4;margin-bottom:14px;
+}
+.ip-title{font-size:1.6rem;font-weight:700;letter-spacing:-.5px;line-height:1.1;margin-bottom:12px;}
+.ip-desc{font-size:.82rem;color:rgba(255,255,255,0.45);line-height:1.75;font-weight:300;margin-bottom:24px;}
+.ip-hints{display:flex;flex-direction:column;gap:8px;}
+.ip-hint{
+  display:flex;align-items:center;gap:10px;
+  font-family:'DM Mono',monospace;font-size:.65rem;
+  color:rgba(255,255,255,0.5);letter-spacing:.5px;
+}
+.ip-hint-dot{
+  width:22px;height:22px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:.65rem;flex-shrink:0;border:1px solid;
+}
+.ip-divider{height:1px;background:rgba(255,255,255,0.08);margin:20px 0;}
+.ip-tech{font-family:'DM Mono',monospace;font-size:.58rem;letter-spacing:1.5px;color:rgba(255,255,255,0.22);}
+
+/* Accent bar at top of panel */
+.ip-bar{height:2px;position:absolute;top:0;left:0;right:0;}
+
+/* ── Scroll indicator ── */
+.scroll-arrow{
+  position:absolute;bottom:28px;left:50%;transform:translateX(-50%);
+  display:flex;flex-direction:column;align-items:center;gap:6px;
+  font-family:'DM Mono',monospace;font-size:.58rem;letter-spacing:2px;
+  color:rgba(255,255,255,0.22);animation:arrowbob 2s ease-in-out infinite;
+  pointer-events:none;z-index:10;
+}
+@keyframes arrowbob{0%,100%{transform:translateX(-50%) translateY(0)}50%{transform:translateX(-50%) translateY(6px)}}
+.last-exhibit .scroll-arrow{display:none;}
+
+/* ── Click ripple ── */
+.click-ripple{
+  position:fixed;pointer-events:none;z-index:300;
+  width:60px;height:60px;border-radius:50%;border:2px solid;
+  transform:translate(-50%,-50%) scale(0);animation:ripple .6s ease-out forwards;
+}
+@keyframes ripple{to{transform:translate(-50%,-50%) scale(3);opacity:0;}}
+
+/* ── Keyboard hint ── */
+#kbd-hint{
+  position:fixed;bottom:20px;left:50%;transform:translateX(-50%);
+  font-family:'DM Mono',monospace;font-size:.58rem;letter-spacing:2px;
+  color:rgba(255,255,255,0.18);z-index:200;text-align:center;
+}
+
+/* ── Commission badge ── */
+.commission-badge{
+  position:absolute;bottom:28px;right:48px;z-index:20;
+  background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);
+  padding:10px 20px;font-size:.7rem;font-weight:600;letter-spacing:1px;
+  color:rgba(255,255,255,0.4);text-decoration:none;pointer-events:all;
+  transition:all .25s;
+}
+.commission-badge:hover{background:rgba(255,255,255,0.1);color:#fff;}
+
+@media(max-width:768px){
+  .info-panel{width:calc(100% - 32px);left:16px;right:16px;bottom:20px;top:auto;transform:none;}
+  .ip-right,.ip-left,.ip-tr,.ip-br{right:16px;left:16px;bottom:20px;top:auto;transform:none;}
+  .nav-center{display:none;}
+  .sdots{display:none;}
+}
+</style>
+</head>
+<body>
+
+<!-- Cursor -->
+<div id="cdot"></div>
+<div id="cring"></div>
+
+<!-- Nav -->
+<nav>
+  <div class="nav-logo">AI.<em>Connections</em>Inc</div>
+  <div class="nav-center">Motion Lab &mdash; Interactive Showcase</div>
+  <div class="nav-right">
+    <a href="index.html">Main Site</a>
+    <a href="design-aurora/index.html">Aurora</a>
+    <a href="design-fluid/index.html">Fluid</a>
+    <a href="design-prism/index.html">Prism</a>
+    <a href="index.html#contact" class="nav-badge">Commission</a>
+  </div>
+</nav>
+
+<!-- Side dots -->
+<div class="sdots" id="sdots">
+  <div class="sdot active" data-i="0" data-label="Neural Network"></div>
+  <div class="sdot" data-i="1" data-label="Live Analytics"></div>
+  <div class="sdot" data-i="2" data-label="Canada Map"></div>
+  <div class="sdot" data-i="3" data-label="AI Pipeline"></div>
+</div>
+
+<!-- Keyboard hint -->
+<div id="kbd-hint">↑ ↓ arrow keys to navigate &nbsp;·&nbsp; mouse to interact &nbsp;·&nbsp; click to reveal</div>
+
+<!-- ════════════════════════════════════════════ -->
+<!-- GALLERY -->
+<!-- ════════════════════════════════════════════ -->
+<div class="gallery" id="gallery">
+
+  <!-- ── EXHIBIT 0: Neural Network ── -->
+  <section class="exhibit" id="ex0" data-i="0">
+    <canvas class="ex-canvas" id="c0"></canvas>
+    <div class="info-panel ip-right" id="ip0">
+      <div class="ip-bar" style="background:linear-gradient(to right,#4d96ff,#c77dff);"></div>
+      <div class="ip-num">01 / 04 &nbsp;·&nbsp; Interaction</div>
+      <div class="ip-title">Neural<br>Intelligence</div>
+      <div class="ip-desc">A live 3D neural network rendered with full perspective projection. The entire architecture responds to your cursor, rotating through three-dimensional space in real time.</div>
+      <div class="ip-divider"></div>
+      <div class="ip-hints">
+        <div class="ip-hint"><div class="ip-hint-dot" style="color:#4d96ff;border-color:#4d96ff;">↕</div>Move mouse — rotate in 3D</div>
+        <div class="ip-hint"><div class="ip-hint-dot" style="color:#c77dff;border-color:#c77dff;">⚡</div>Click anywhere — fire signal</div>
+      </div>
+      <div class="ip-divider"></div>
+      <div class="ip-tech">Canvas 2D · 3D Projection · LERP</div>
+    </div>
+    <div class="scroll-arrow"><span>↓</span><span>scroll</span></div>
+  </section>
+
+  <!-- ── EXHIBIT 1: Dashboard Analytics ── -->
+  <section class="exhibit" id="ex1" data-i="1">
+    <canvas class="ex-canvas" id="c1"></canvas>
+    <div class="info-panel ip-left" id="ip1">
+      <div class="ip-bar" style="background:linear-gradient(to right,#a78bfa,#4d96ff);"></div>
+      <div class="ip-num">02 / 04 &nbsp;·&nbsp; Scrub Control</div>
+      <div class="ip-title">Live<br>Analytics</div>
+      <div class="ip-desc">A full analytics dashboard where mouse position scrubs through time. Move horizontally to travel through months. Click to cycle between four business metrics.</div>
+      <div class="ip-divider"></div>
+      <div class="ip-hints">
+        <div class="ip-hint"><div class="ip-hint-dot" style="color:#a78bfa;border-color:#a78bfa;">↔</div>Move horizontally — scrub months</div>
+        <div class="ip-hint"><div class="ip-hint-dot" style="color:#6bcb77;border-color:#6bcb77;">⟳</div>Click — cycle metrics</div>
+      </div>
+      <div class="ip-divider"></div>
+      <div class="ip-tech">Canvas 2D · Time Scrub · Smooth Lerp</div>
+    </div>
+    <div class="scroll-arrow"><span>↓</span><span>scroll</span></div>
+  </section>
+
+  <!-- ── EXHIBIT 2: Canada Map ── -->
+  <section class="exhibit" id="ex2" data-i="2">
+    <canvas class="ex-canvas" id="c2"></canvas>
+    <div class="info-panel ip-tr" id="ip2">
+      <div class="ip-bar" style="background:linear-gradient(to right,#06b6d4,#4d96ff);"></div>
+      <div class="ip-num">03 / 04 &nbsp;·&nbsp; Flashlight</div>
+      <div class="ip-title">Canadian<br>Network</div>
+      <div class="ip-desc">A dark map of Canada revealed only by your mouse cursor — a flashlight in the void. City connections only emerge when light reaches them. Click a city to connect it to all others.</div>
+      <div class="ip-divider"></div>
+      <div class="ip-hints">
+        <div class="ip-hint"><div class="ip-hint-dot" style="color:#06b6d4;border-color:#06b6d4;">◎</div>Move mouse — reveal the map</div>
+        <div class="ip-hint"><div class="ip-hint-dot" style="color:#4d96ff;border-color:#4d96ff;">●</div>Click city — connect all routes</div>
+      </div>
+      <div class="ip-divider"></div>
+      <div class="ip-tech">Canvas 2D · Clip Path · Radial Gradient</div>
+    </div>
+    <div class="scroll-arrow"><span>↓</span><span>scroll</span></div>
+  </section>
+
+  <!-- ── EXHIBIT 3: AI Pipeline ── -->
+  <section class="exhibit last-exhibit" id="ex3" data-i="3">
+    <canvas class="ex-canvas" id="c3"></canvas>
+    <div class="info-panel ip-br" id="ip3">
+      <div class="ip-bar" style="background:linear-gradient(to right,#4d96ff,#6bcb77);"></div>
+      <div class="ip-num">04 / 04 &nbsp;·&nbsp; Flow Control</div>
+      <div class="ip-title">AI<br>Pipeline</div>
+      <div class="ip-desc">Your mouse controls where data lives inside the AI processing pipeline. Slide left to hold data at input — slide right to push it toward outputs. Click to inject a new batch.</div>
+      <div class="ip-divider"></div>
+      <div class="ip-hints">
+        <div class="ip-hint"><div class="ip-hint-dot" style="color:#4d96ff;border-color:#4d96ff;">↔</div>Move horizontally — control flow</div>
+        <div class="ip-hint"><div class="ip-hint-dot" style="color:#6bcb77;border-color:#6bcb77;">+</div>Click — inject new data batch</div>
+      </div>
+      <div class="ip-divider"></div>
+      <div class="ip-tech">Canvas 2D · Bézier Paths · Physics</div>
+    </div>
+    <a href="index.html#contact" class="commission-badge">Commission a Custom Animation →</a>
+  </section>
+
+</div><!-- /gallery -->
+
+<script>
+'use strict';
+
+// ═══════════════════════════════════════════════════════════
+// SHARED UTILITIES
+// ═══════════════════════════════════════════════════════════
+const lerp = (a, b, t) => a + (b - a) * t;
+const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
+
+let GMX = window.innerWidth / 2, GMY = window.innerHeight / 2;
+document.addEventListener('mousemove', e => { GMX = e.clientX; GMY = e.clientY; });
+
+// ── Custom cursor ──
+const cdot = document.getElementById('cdot');
+const cring = document.getElementById('cring');
+let cx = GMX, cy = GMY;
+;(function cursorLoop() {
+  cdot.style.left = GMX + 'px'; cdot.style.top = GMY + 'px';
+  cx = lerp(cx, GMX, 0.12); cy = lerp(cy, GMY, 0.12);
+  cring.style.left = cx + 'px'; cring.style.top = cy + 'px';
+  requestAnimationFrame(cursorLoop);
+})();
+document.querySelectorAll('a,button,[data-i]').forEach(el => {
+  el.addEventListener('mouseenter', () => cring.classList.add('xl'));
+  el.addEventListener('mouseleave', () => cring.classList.remove('xl'));
+});
+
+// ── Click ripple ──
+document.addEventListener('click', e => {
+  const r = document.createElement('div');
+  r.className = 'click-ripple';
+  r.style.cssText = `left:${e.clientX}px;top:${e.clientY}px;border-color:rgba(255,255,255,0.4)`;
+  document.body.appendChild(r);
+  setTimeout(() => r.remove(), 700);
+});
+
+// ── Gallery scroll & nav ──
+const gallery = document.getElementById('gallery');
+const sdots = document.querySelectorAll('.sdot');
+let activeEx = 0;
+
+function goTo(i) {
+  activeEx = clamp(i, 0, 3);
+  gallery.scrollTo({ top: activeEx * gallery.offsetHeight, behavior: 'smooth' });
+  sdots.forEach((d, j) => d.classList.toggle('active', j === activeEx));
+}
+
+gallery.addEventListener('scroll', () => {
+  const i = Math.round(gallery.scrollTop / gallery.offsetHeight);
+  if (i !== activeEx) { activeEx = i; sdots.forEach((d, j) => d.classList.toggle('active', j === i)); }
+}, { passive: true });
+
+sdots.forEach(d => d.addEventListener('click', () => goTo(+d.dataset.i)));
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'ArrowDown' || e.key === 'ArrowRight') goTo(activeEx + 1);
+  if (e.key === 'ArrowUp'   || e.key === 'ArrowLeft')  goTo(activeEx - 1);
+});
+
+// ── Canvas helpers ──
+function initCanvas(id) {
+  const cv = document.getElementById(id);
+  const ctx = cv.getContext('2d');
+  function resize() {
+    cv.width  = cv.offsetWidth;
+    cv.height = cv.offsetHeight;
+  }
+  resize();
+  window.addEventListener('resize', resize);
+  return { cv, ctx, get W() { return cv.width; }, get H() { return cv.height; } };
+}
+
+// ── Exhibit visibility ──
+const visible = [true, false, false, false];
+const io = new IntersectionObserver(en => {
+  en.forEach(e => { const i = +e.target.dataset.i; if (i !== undefined) visible[i] = e.isIntersecting; });
+}, { threshold: 0.4 });
+document.querySelectorAll('.exhibit').forEach(el => io.observe(el));
+
+// ═══════════════════════════════════════════════════════════
+// EXHIBIT 0 — 3D Rotating Neural Network
+// ═══════════════════════════════════════════════════════════
+;(function ex0() {
+  const { cv, ctx, W, H } = initCanvas('c0');
+
+  // Network architecture — 3D positions (x = left/right across screen, y = up/down, z = depth)
+  const archDef = [
+    { x: -240, ys: [-135, -45, 45, 135] },
+    { x: -120, ys: [-170, -85, 0, 85, 170] },
+    { x: 0,    ys: [-200, -120, -40, 40, 120, 200] },
+    { x: 120,  ys: [-170, -85, 0, 85, 170] },
+    { x: 240,  ys: [-110, 0, 110] }
+  ];
+
+  const FILLS = ['#4d96ff', '#c77dff', '#00d4ff'];
+  const PULSE_COLS = ['#7ab4ff', '#d4a8ff', '#60e8ff', '#00ff9d'];
+
+  // Build flat node list
+  const nodes = [];
+  archDef.forEach((layer, li) => {
+    layer.ys.forEach(y => {
+      nodes.push({ x: layer.x, y, z: (Math.random() - 0.5) * 20, li, fill: FILLS[Math.floor(Math.random() * FILLS.length)] });
+    });
+  });
+
+  // Build edges (partial ~55% connectivity between adjacent layers)
+  const edges = [];
+  archDef.forEach((layer, li) => {
+    if (li >= archDef.length - 1) return;
+    const fromNodes = nodes.filter(n => n.li === li);
+    const toNodes   = nodes.filter(n => n.li === li + 1);
+    fromNodes.forEach(a => toNodes.forEach(b => {
+      if (Math.random() < 0.52) edges.push({ a, b });
+    }));
+  });
+
+  // Signal pulses (created on click)
+  const pulses = [];
+
+  cv.addEventListener('click', e => {
+    // Pick random path through all layers
+    const path = archDef.map((_, li) => {
+      const layerNodes = nodes.filter(n => n.li === li);
+      return layerNodes[Math.floor(Math.random() * layerNodes.length)];
+    });
+    pulses.push({ path, t: 0, col: PULSE_COLS[Math.floor(Math.random() * PULSE_COLS.length)] });
+  });
+
+  // Camera rotation — driven by mouse
+  let tRY = 0, tRX = 0, rY = 0, rX = 0;
+
+  function project(nx, ny, nz) {
+    // Rotate Y
+    let x = nx * Math.cos(rY) - nz * Math.sin(rY);
+    let z = nx * Math.sin(rY) + nz * Math.cos(rY);
+    // Rotate X
+    let y = ny * Math.cos(rX) - z  * Math.sin(rX);
+    z      = ny * Math.sin(rX) + z  * Math.cos(rX);
+    // Perspective
+    const fov = 700, base = fov / (fov + z + 560);
+    return { sx: W / 2 + x * base, sy: H / 2 + y * base, s: base, z };
+  }
+
+  function draw() {
+    if (!visible[0]) { requestAnimationFrame(draw); return; }
+
+    // Smooth camera
+    const normX = (GMX / window.innerWidth  - 0.5);
+    const normY = (GMY / window.innerHeight - 0.5);
+    tRY = normX * 0.5;  // max ±0.5 rad (~28°)
+    tRX = normY * 0.3;
+    rY = lerp(rY, tRY, 0.055);
+    rX = lerp(rX, tRX, 0.055);
+
+    ctx.clearRect(0, 0, W, H);
+    ctx.fillStyle = '#030309';
+    ctx.fillRect(0, 0, W, H);
+
+    // Project all nodes
+    const proj = nodes.map(n => ({ n, p: project(n.x, n.y, n.z) }));
+
+    // Sort edges back-to-front by average z
+    const sortedEdges = edges.map(e => {
+      const pa = project(e.a.x, e.a.y, e.a.z);
+      const pb = project(e.b.x, e.b.y, e.b.z);
+      return { pa, pb, z: (pa.z + pb.z) / 2, col: e.a.fill };
+    }).sort((a, b) => a.z - b.z);
+
+    // Draw edges
+    sortedEdges.forEach(({ pa, pb, z, col }) => {
+      const alpha = clamp(0.06 + (1 - (z + 400) / 800) * 0.14, 0.04, 0.22);
+      ctx.beginPath();
+      ctx.moveTo(pa.sx, pa.sy);
+      ctx.lineTo(pb.sx, pb.sy);
+      ctx.strokeStyle = `rgba(100,160,255,${alpha})`;
+      ctx.lineWidth = 0.7;
+      ctx.stroke();
+    });
+
+    // Sort nodes back-to-front
+    const sortedNodes = [...proj].sort((a, b) => a.p.z - b.p.z);
+
+    // Draw nodes
+    sortedNodes.forEach(({ n, p }) => {
+      const r = clamp(4 + p.s * 4, 3, 9);
+      const glow = ctx.createRadialGradient(p.sx, p.sy, 0, p.sx, p.sy, r * 3);
+      glow.addColorStop(0, n.fill + '40');
+      glow.addColorStop(1, n.fill + '00');
+      ctx.beginPath(); ctx.arc(p.sx, p.sy, r * 3, 0, Math.PI * 2);
+      ctx.fillStyle = glow; ctx.fill();
+
+      ctx.beginPath(); ctx.arc(p.sx, p.sy, r, 0, Math.PI * 2);
+      ctx.fillStyle = n.fill;
+      ctx.shadowBlur = 10; ctx.shadowColor = n.fill;
+      ctx.fill(); ctx.shadowBlur = 0;
+    });
+
+    // Draw & advance pulses
+    for (let i = pulses.length - 1; i >= 0; i--) {
+      const pulse = pulses[i];
+      pulse.t = Math.min(1, pulse.t + 0.008);
+
+      // Interpolate position along path
+      const seg = pulse.t * (pulse.path.length - 1);
+      const segI = Math.floor(seg);
+      const segF = seg - segI;
+      if (segI >= pulse.path.length - 1) { pulses.splice(i, 1); continue; }
+
+      const nodeA = pulse.path[segI];
+      const nodeB = pulse.path[segI + 1];
+      const pa = project(nodeA.x, nodeA.y, nodeA.z);
+      const pb = project(nodeB.x, nodeB.y, nodeB.z);
+      const px = lerp(pa.sx, pb.sx, segF);
+      const py = lerp(pa.sy, pb.sy, segF);
+
+      ctx.beginPath(); ctx.arc(px, py, 5, 0, Math.PI * 2);
+      ctx.fillStyle = pulse.col;
+      ctx.shadowBlur = 18; ctx.shadowColor = pulse.col;
+      ctx.fill(); ctx.shadowBlur = 0;
+
+      // Light up connected edge
+      ctx.beginPath(); ctx.moveTo(pa.sx, pa.sy); ctx.lineTo(pb.sx, pb.sy);
+      ctx.strokeStyle = pulse.col + '80'; ctx.lineWidth = 1.5; ctx.stroke();
+    }
+
+    requestAnimationFrame(draw);
+  }
+  draw();
+})();
+
+// ═══════════════════════════════════════════════════════════
+// EXHIBIT 1 — Dashboard Analytics (Mouse Scrub)
+// ═══════════════════════════════════════════════════════════
+;(function ex1() {
+  const { cv, ctx, W, H } = initCanvas('c1');
+
+  const MONTHS = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+  const METRICS = [
+    { name: 'REVENUE GROWTH',     vals: [18,22,19,28,26,34,31,42,38,48,44,55], unit:'%',   col:'#4d96ff' },
+    { name: 'AUTOMATIONS ACTIVE', vals: [240,380,420,510,580,720,810,940,1050,1200,1400,1847], unit:'', col:'#c77dff' },
+    { name: 'HOURS SAVED / WEEK', vals: [45,80,120,175,210,290,340,410,480,580,680,847], unit:' hrs', col:'#6bcb77' },
+    { name: 'CLIENT SATISFACTION',vals: [82,84,86,87,88,90,91,92,93,94,94,95], unit:'%',   col:'#ffd93d' },
+  ];
+
+  let metricIdx = 0;
+  let targetMetric = 0;
+  let activeMonth = 5;
+  let smoothMonth = 5;
+  // Animated bar heights (for smooth transition when metric changes)
+  let barHeights = new Array(12).fill(0);
+  let targetHeights = new Array(12).fill(0);
+
+  cv.addEventListener('click', () => {
+    metricIdx = (metricIdx + 1) % METRICS.length;
+    targetMetric = metricIdx;
+  });
+
+  function draw() {
+    if (!visible[1]) { requestAnimationFrame(draw); return; }
+
+    const m = METRICS[targetMetric];
+    const norm = (GMX - 0) / window.innerWidth;
+    activeMonth = Math.round(clamp(norm * 11, 0, 11));
+    smoothMonth = lerp(smoothMonth, activeMonth, 0.1);
+
+    // Update target heights
+    const maxVal = Math.max(...m.vals);
+    m.vals.forEach((v, i) => { targetHeights[i] = v / maxVal; });
+    barHeights = barHeights.map((h, i) => lerp(h, targetHeights[i], 0.08));
+
+    ctx.clearRect(0, 0, W, H);
+    ctx.fillStyle = '#030309'; ctx.fillRect(0, 0, W, H);
+
+    const CX = W / 2, CY = H / 2;
+
+    // ── Big metric number ──
+    const activeVal = m.vals[activeMonth];
+    const dispStr = m.name === 'AUTOMATIONS ACTIVE' ? activeVal.toLocaleString() : activeVal;
+
+    ctx.font = `700 ${Math.min(W * 0.08, 90)}px 'Space Grotesk', sans-serif`;
+    ctx.textAlign = 'center';
+    ctx.fillStyle = m.col;
+    ctx.shadowBlur = 30; ctx.shadowColor = m.col + '60';
+    ctx.fillText(dispStr + m.unit, CX, CY * 0.65);
+    ctx.shadowBlur = 0;
+
+    // Metric name
+    ctx.font = `500 ${Math.min(W * 0.014, 13)}px 'DM Mono', monospace`;
+    ctx.fillStyle = 'rgba(255,255,255,0.35)';
+    ctx.letterSpacing = '3px';
+    ctx.fillText(m.name, CX, CY * 0.65 + 28);
+    ctx.letterSpacing = '0px';
+
+    // Month label
+    ctx.font = `600 ${Math.min(W * 0.018, 16)}px 'Space Grotesk', sans-serif`;
+    ctx.fillStyle = 'rgba(255,255,255,0.5)';
+    ctx.fillText(MONTHS[activeMonth] + ' 2025', CX, CY * 0.65 + 54);
+
+    // ── Bar chart ──
+    const barAreaW = Math.min(W * 0.75, 800);
+    const barAreaH = H * 0.32;
+    const barAreaX = (W - barAreaW) / 2;
+    const barAreaY = CY * 0.82;
+    const barW     = barAreaW / 12 * 0.65;
+    const barGap   = barAreaW / 12;
+
+    // Axis
+    ctx.beginPath();
+    ctx.moveTo(barAreaX, barAreaY + barAreaH);
+    ctx.lineTo(barAreaX + barAreaW, barAreaY + barAreaH);
+    ctx.strokeStyle = 'rgba(255,255,255,0.08)';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+
+    // Grid lines
+    [0.33, 0.66, 1].forEach(frac => {
+      const gy = barAreaY + barAreaH - frac * barAreaH;
+      ctx.beginPath();
+      ctx.moveTo(barAreaX, gy);
+      ctx.lineTo(barAreaX + barAreaW, gy);
+      ctx.strokeStyle = 'rgba(255,255,255,0.04)';
+      ctx.setLineDash([4, 6]);
+      ctx.stroke();
+      ctx.setLineDash([]);
+    });
+
+    barHeights.forEach((h, i) => {
+      const bx = barAreaX + i * barGap + (barGap - barW) / 2;
+      const bh = h * barAreaH;
+      const by = barAreaY + barAreaH - bh;
+      const isActive = i === Math.round(smoothMonth);
+
+      // Bar glow
+      if (isActive) {
+        const grd = ctx.createLinearGradient(bx, by, bx, by + bh);
+        grd.addColorStop(0, m.col + 'cc');
+        grd.addColorStop(1, m.col + '30');
+        ctx.fillStyle = grd;
+        ctx.shadowBlur = 20; ctx.shadowColor = m.col;
+      } else {
+        ctx.fillStyle = m.col + '35';
+        ctx.shadowBlur = 0;
+      }
+      ctx.beginPath();
+      ctx.roundRect(bx, by, barW, bh, [3, 3, 0, 0]);
+      ctx.fill();
+      ctx.shadowBlur = 0;
+
+      // Month label
+      ctx.font = `500 ${Math.min(W * 0.011, 10)}px 'DM Mono', monospace`;
+      ctx.fillStyle = isActive ? 'rgba(255,255,255,0.7)' : 'rgba(255,255,255,0.2)';
+      ctx.textAlign = 'center';
+      ctx.fillText(MONTHS[i], bx + barW / 2, barAreaY + barAreaH + 16);
+
+      // Active bar value label
+      if (isActive) {
+        ctx.font = `600 ${Math.min(W * 0.012, 11)}px 'DM Mono', monospace`;
+        ctx.fillStyle = m.col;
+        ctx.fillText(m.vals[i] + m.unit, bx + barW / 2, by - 8);
+      }
+    });
+
+    // Sparkline at top-right
+    const slX = barAreaX + barAreaW - 10, slW = 120, slY = barAreaY * 0.22, slH = 36;
+    ctx.beginPath();
+    m.vals.forEach((v, i) => {
+      const sx = slX - slW + i * (slW / 11);
+      const sy = slY + slH - (v / maxVal) * slH;
+      i === 0 ? ctx.moveTo(sx, sy) : ctx.lineTo(sx, sy);
+    });
+    ctx.strokeStyle = m.col + '60'; ctx.lineWidth = 1.5; ctx.stroke();
+
+    // Instruction overlay (very subtle, fades on first interact)
+    ctx.font = `300 ${Math.min(W * 0.011, 10)}px 'DM Mono', monospace`;
+    ctx.fillStyle = 'rgba(255,255,255,0.12)';
+    ctx.textAlign = 'center';
+    ctx.fillText('← move mouse to scrub months · click to change metric →', CX, H - 20);
+
+    requestAnimationFrame(draw);
+  }
+  draw();
+})();
+
+// ═══════════════════════════════════════════════════════════
+// EXHIBIT 2 — Canada Map Flashlight
+// ═══════════════════════════════════════════════════════════
+;(function ex2() {
+  const { cv, ctx, W, H } = initCanvas('c2');
+
+  const cities = [
+    { name: 'Vancouver',  code:'BC', ox:-0.38, oy: 0.08 },
+    { name: 'Calgary',    code:'AB', ox:-0.20, oy: 0.12 },
+    { name: 'Winnipeg',   code:'MB', ox: 0.01, oy: 0.14 },
+    { name: 'Toronto',    code:'ON', ox: 0.20, oy: 0.09, hq: true },
+    { name: 'Ottawa',     code:'ON', ox: 0.26, oy: 0.04 },
+    { name: 'Montréal',   code:'QC', ox: 0.30, oy: 0.02 },
+    { name: 'Halifax',    code:'NS', ox: 0.40, oy: 0.05 },
+  ];
+
+  // Connections (pairs of city indices)
+  const connections = [[0,1],[1,2],[2,3],[3,4],[4,5],[5,6],[0,3],[3,6],[1,3],[2,5]];
+
+  let selectedCity = null;
+  let flashR = 130;
+  let targetFlashR = 130;
+
+  cv.addEventListener('click', e => {
+    const cx2 = W / 2, cy2 = H / 2;
+    let nearest = null, nearestDist = 60;
+    cities.forEach((c, i) => {
+      const cx_ = cx2 + c.ox * W;
+      const cy_ = cy2 + c.oy * H;
+      const d = Math.hypot(e.clientX - cx_, (e.clientY - 58) - cy_);
+      if (d < nearestDist) { nearestDist = d; nearest = i; }
+    });
+    selectedCity = nearest === selectedCity ? null : nearest;
+    // Pulse effect
+    targetFlashR = 200;
+    setTimeout(() => { targetFlashR = 130; }, 400);
+  });
+
+  function cityPos(c) {
+    return { x: W / 2 + c.ox * W, y: H / 2 + c.oy * H };
+  }
+
+  function drawConnections(alpha, selectedOnly = false) {
+    connections.forEach(([a, b]) => {
+      const pa = cityPos(cities[a]), pb = cityPos(cities[b]);
+      const isSelected = selectedCity !== null && (selectedCity === a || selectedCity === b);
+      if (selectedOnly && !isSelected) return;
+
+      const col = isSelected ? '#06b6d4' : '#4d96ff';
+      const lw  = isSelected ? 1.5 : 0.8;
+
+      // Curved arc
+      const mx = (pa.x + pb.x) / 2;
+      const my = (pa.y + pb.y) / 2 - Math.hypot(pb.x - pa.x, pb.y - pa.y) * 0.15;
+
+      ctx.beginPath();
+      ctx.moveTo(pa.x, pa.y);
+      ctx.quadraticCurveTo(mx, my, pb.x, pb.y);
+      ctx.strokeStyle = col + Math.round(alpha * 255).toString(16).padStart(2, '0');
+      ctx.lineWidth = lw;
+      ctx.stroke();
+    });
+  }
+
+  function drawCities(alpha) {
+    cities.forEach((c, i) => {
+      const { x, y } = cityPos(c);
+      const isSelected = selectedCity === i;
+      const isNearMouse = Math.hypot(GMX - x, (GMY - 58) - y) < 70;
+      const r = c.hq ? 8 : 6;
+      const col = c.hq ? '#c77dff' : '#4d96ff';
+      const a = Math.round(alpha * 255).toString(16).padStart(2, '0');
+
+      // Pulse ring
+      if (isSelected || isNearMouse) {
+        ctx.beginPath();
+        ctx.arc(x, y, r + 10, 0, Math.PI * 2);
+        ctx.strokeStyle = col + '40';
+        ctx.lineWidth = 1;
+        ctx.stroke();
+      }
+
+      // City dot
+      ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2);
+      ctx.fillStyle = col + a;
+      ctx.shadowBlur = isSelected ? 16 : 8;
+      ctx.shadowColor = col;
+      ctx.fill();
+      ctx.shadowBlur = 0;
+
+      // Label
+      if (alpha > 0.4) {
+        ctx.font = `500 ${c.hq ? 11 : 10}px 'Space Grotesk', sans-serif`;
+        ctx.fillStyle = `rgba(255,255,255,${alpha * 0.8})`;
+        ctx.textAlign = 'center';
+        ctx.fillText(c.name, x, y - r - 8);
+        ctx.font = `400 9px 'DM Mono', monospace`;
+        ctx.fillStyle = `rgba(77,150,255,${alpha * 0.6})`;
+        ctx.fillText(c.code, x, y - r - 19);
+      }
+    });
+  }
+
+  function draw() {
+    if (!visible[2]) { requestAnimationFrame(draw); return; }
+
+    flashR = lerp(flashR, targetFlashR, 0.12);
+
+    const mx = GMX, my = GMY - 58; // adjust for nav height
+
+    ctx.clearRect(0, 0, W, H);
+    ctx.fillStyle = '#030309'; ctx.fillRect(0, 0, W, H);
+
+    // Draw dim base layer
+    ctx.save();
+    drawConnections(0.06);
+    drawCities(0.15);
+    ctx.restore();
+
+    // Draw bright layer clipped to flashlight
+    ctx.save();
+    ctx.beginPath(); ctx.arc(mx, my, flashR, 0, Math.PI * 2); ctx.clip();
+    drawConnections(0.9);
+    if (selectedCity !== null) drawConnections(1.0, true);
+    drawCities(1.0);
+    ctx.restore();
+
+    // Dark vignette overlay (feathers flashlight edge)
+    const ov = ctx.createRadialGradient(mx, my, flashR * 0.55, mx, my, flashR * 1.6);
+    ov.addColorStop(0, 'rgba(3,3,9,0)');
+    ov.addColorStop(1, 'rgba(3,3,9,0.92)');
+    ctx.fillStyle = ov; ctx.fillRect(0, 0, W, H);
+
+    // Selected city connections overlay (drawn on top, full brightness)
+    if (selectedCity !== null) {
+      ctx.save();
+      drawConnections(0.8, true);
+      ctx.restore();
+    }
+
+    // Subtle instruction
+    ctx.font = '300 10px "DM Mono", monospace';
+    ctx.fillStyle = 'rgba(255,255,255,0.1)';
+    ctx.textAlign = 'center';
+    ctx.fillText('move to reveal · click a city to connect all routes', W / 2, H - 18);
+
+    requestAnimationFrame(draw);
+  }
+  draw();
+})();
+
+// ═══════════════════════════════════════════════════════════
+// EXHIBIT 3 — AI Pipeline Flow Control
+// ═══════════════════════════════════════════════════════════
+;(function ex3() {
+  const { cv, ctx, W, H } = initCanvas('c3');
+
+  const INPUTS  = ['Emails', 'Sheets', 'CRM', 'Docs'];
+  const OUTPUTS = ['Reports', 'Schedule', 'Responses', 'Insights'];
+  const IN_COL  = '#4d96ff';
+  const OUT_COL = '#6bcb77';
+  const AI_COL  = '#c77dff';
+
+  // Particles: t=0 at input, t=1 at output
+  function mkParticle() {
+    return {
+      t: Math.random(),
+      inIdx: Math.floor(Math.random() * 4),
+      outIdx: Math.floor(Math.random() * 4),
+      speed: 0.006 + Math.random() * 0.004,
+      col: Math.random() > 0.5 ? IN_COL : OUT_COL,
+      r: 3 + Math.random() * 2,
+    };
+  }
+  let particles = Array.from({ length: 22 }, mkParticle);
+  let flowProgress = 0.5; // 0=left, 1=right
+  let smoothFlow = 0.5;
+  let hoveredStage = -1; // -1=none, 0=inputs, 1=core, 2=outputs
+
+  // Inject batch on click
+  cv.addEventListener('click', () => {
+    for (let i = 0; i < 6; i++) {
+      const p = mkParticle();
+      p.t = 0.02 + Math.random() * 0.05;
+      particles.push(p);
+    }
+    if (particles.length > 50) particles.splice(0, particles.length - 50);
+  });
+
+  cv.addEventListener('mousemove', e => {
+    const rx = e.offsetX / cv.offsetWidth;
+    hoveredStage = rx < 0.3 ? 0 : rx > 0.7 ? 2 : 1;
+  });
+
+  function getPositions() {
+    const CX = W / 2, CY = H / 2;
+    const iX = W * 0.1, oX = W * 0.9, gap = H * 0.18;
+    const top = CY - gap * 1.5;
+    return {
+      inputs:  INPUTS.map((_,  i) => ({ x: iX, y: top + i * gap })),
+      outputs: OUTPUTS.map((_, i) => ({ x: oX, y: top + i * gap })),
+      core:    { x: CX, y: CY }
+    };
+  }
+
+  function bezierPoint(p0, p1, p2, t) {
+    const mt = 1 - t;
+    return {
+      x: mt * mt * p0.x + 2 * mt * t * p1.x + t * t * p2.x,
+      y: mt * mt * p0.y + 2 * mt * t * p1.y + t * t * p2.y,
+    };
+  }
+
+  function draw() {
+    if (!visible[3]) { requestAnimationFrame(draw); return; }
+
+    // Mouse X drives flow progress
+    flowProgress = clamp(GMX / window.innerWidth, 0.02, 0.98);
+    smoothFlow = lerp(smoothFlow, flowProgress, 0.06);
+
+    ctx.clearRect(0, 0, W, H);
+    ctx.fillStyle = '#030309'; ctx.fillRect(0, 0, W, H);
+
+    const pos = getPositions();
+    const CX = pos.core.x, CY = pos.core.y;
+
+    // ── Draw input tubes ──
+    pos.inputs.forEach((inp, i) => {
+      const ctrl = { x: (inp.x + CX) / 2, y: inp.y };
+      // Tube path
+      ctx.beginPath();
+      ctx.moveTo(inp.x + 60, inp.y);
+      ctx.quadraticCurveTo(ctrl.x, inp.y, CX - 50, CY);
+      ctx.strokeStyle = hoveredStage === 0 ? IN_COL + '50' : IN_COL + '22';
+      ctx.lineWidth = hoveredStage === 0 ? 2 : 1.2;
+      ctx.stroke();
+    });
+
+    // ── Draw output tubes ──
+    pos.outputs.forEach((out, i) => {
+      const ctrl = { x: (CX + out.x) / 2, y: out.y };
+      ctx.beginPath();
+      ctx.moveTo(CX + 50, CY);
+      ctx.quadraticCurveTo(ctrl.x, out.y, out.x - 60, out.y);
+      ctx.strokeStyle = hoveredStage === 2 ? OUT_COL + '50' : OUT_COL + '22';
+      ctx.lineWidth = hoveredStage === 2 ? 2 : 1.2;
+      ctx.stroke();
+    });
+
+    // ── Input boxes ──
+    pos.inputs.forEach((inp, i) => {
+      const bw = 100, bh = 36;
+      const active = hoveredStage === 0;
+      ctx.beginPath();
+      ctx.roundRect(inp.x - 10, inp.y - bh / 2, bw, bh, 6);
+      ctx.fillStyle = active ? IN_COL + '18' : IN_COL + '08';
+      ctx.fill();
+      ctx.strokeStyle = active ? IN_COL + '60' : IN_COL + '28';
+      ctx.lineWidth = 1;
+      ctx.stroke();
+      ctx.font = '500 10px "DM Mono", monospace';
+      ctx.fillStyle = active ? IN_COL : IN_COL + '80';
+      ctx.textAlign = 'center';
+      ctx.fillText(INPUTS[i], inp.x + bw / 2 - 10, inp.y + 4);
+    });
+
+    // ── Output boxes ──
+    pos.outputs.forEach((out, i) => {
+      const bw = 110, bh = 36;
+      const active = hoveredStage === 2;
+      ctx.beginPath();
+      ctx.roundRect(out.x - bw + 10, out.y - bh / 2, bw, bh, 6);
+      ctx.fillStyle = active ? OUT_COL + '18' : OUT_COL + '08';
+      ctx.fill();
+      ctx.strokeStyle = active ? OUT_COL + '60' : OUT_COL + '28';
+      ctx.lineWidth = 1;
+      ctx.stroke();
+      ctx.font = '500 10px "DM Mono", monospace';
+      ctx.fillStyle = active ? OUT_COL : OUT_COL + '80';
+      ctx.textAlign = 'center';
+      ctx.fillText(OUTPUTS[i], out.x - bw / 2 + 10, out.y + 4);
+    });
+
+    // ── AI Core ──
+    const coreR = Math.min(W, H) * 0.1;
+    const coreActive = hoveredStage === 1;
+
+    // Glow
+    const cg = ctx.createRadialGradient(CX, CY, 0, CX, CY, coreR * 2.2);
+    cg.addColorStop(0, AI_COL + '25');
+    cg.addColorStop(1, AI_COL + '00');
+    ctx.beginPath(); ctx.arc(CX, CY, coreR * 2.2, 0, Math.PI * 2);
+    ctx.fillStyle = cg; ctx.fill();
+
+    // Outer ring
+    ctx.beginPath(); ctx.arc(CX, CY, coreR + (coreActive ? 10 : 0), 0, Math.PI * 2);
+    ctx.strokeStyle = coreActive ? AI_COL + 'aa' : AI_COL + '40';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+
+    // Core fill
+    const cf = ctx.createRadialGradient(CX, CY, 0, CX, CY, coreR);
+    cf.addColorStop(0, AI_COL + 'cc');
+    cf.addColorStop(1, '#4d96ff' + '66');
+    ctx.beginPath(); ctx.arc(CX, CY, coreR, 0, Math.PI * 2);
+    ctx.fillStyle = cf;
+    ctx.shadowBlur = coreActive ? 30 : 16; ctx.shadowColor = AI_COL;
+    ctx.fill(); ctx.shadowBlur = 0;
+
+    // Core label
+    ctx.font = `600 ${Math.max(10, Math.min(14, coreR * 0.28))}px 'Space Grotesk', sans-serif`;
+    ctx.fillStyle = 'rgba(255,255,255,0.9)';
+    ctx.textAlign = 'center';
+    ctx.fillText('AI', CX, CY - 4);
+    ctx.font = `400 ${Math.max(7, Math.min(9, coreR * 0.18))}px 'DM Mono', monospace`;
+    ctx.fillStyle = 'rgba(255,255,255,0.5)';
+    ctx.fillText('ENGINE', CX, CY + 10);
+
+    // ── Particles ──
+    particles.forEach(p => {
+      // Target t is driven by mouse flow progress
+      const targetT = clamp(smoothFlow + (p.t - 0.5) * 0.4, 0.02, 0.98);
+      p.t = lerp(p.t, targetT, 0.04);
+
+      const inp = pos.inputs[p.inIdx];
+      const out = pos.outputs[p.outIdx];
+
+      let px, py;
+      if (p.t < 0.5) {
+        // Input side: travel from input box to AI core
+        const localT = p.t * 2;
+        const ctrl = { x: (inp.x + CX) / 2, y: inp.y };
+        const pt = bezierPoint({ x: inp.x + 50, y: inp.y }, ctrl, { x: CX - 40, y: CY }, localT);
+        px = pt.x; py = pt.y;
+        p.col = IN_COL;
+      } else {
+        // Output side: travel from AI core to output box
+        const localT = (p.t - 0.5) * 2;
+        const ctrl = { x: (CX + out.x) / 2, y: out.y };
+        const pt = bezierPoint({ x: CX + 40, y: CY }, ctrl, { x: out.x - 50, y: out.y }, localT);
+        px = pt.x; py = pt.y;
+        p.col = OUT_COL;
+      }
+
+      ctx.beginPath(); ctx.arc(px, py, p.r, 0, Math.PI * 2);
+      ctx.fillStyle = p.col + 'cc';
+      ctx.shadowBlur = 10; ctx.shadowColor = p.col;
+      ctx.fill(); ctx.shadowBlur = 0;
+    });
+
+    // Flow position indicator bar
+    const barW = W * 0.5, barX = (W - barW) / 2, barY = H - 36;
+    ctx.beginPath();
+    ctx.roundRect(barX, barY, barW, 3, 2);
+    ctx.fillStyle = 'rgba(255,255,255,0.06)'; ctx.fill();
+
+    const indicatorX = barX + smoothFlow * barW;
+    const iGrd = ctx.createLinearGradient(barX, 0, barX + barW, 0);
+    iGrd.addColorStop(0, IN_COL); iGrd.addColorStop(1, OUT_COL);
+    ctx.beginPath(); ctx.roundRect(barX, barY, smoothFlow * barW, 3, 2);
+    ctx.fillStyle = iGrd; ctx.fill();
+    ctx.beginPath(); ctx.arc(indicatorX, barY + 1.5, 5, 0, Math.PI * 2);
+    ctx.fillStyle = '#fff'; ctx.shadowBlur = 8; ctx.shadowColor = '#fff'; ctx.fill(); ctx.shadowBlur = 0;
+
+    // Labels
+    ctx.font = '400 9px "DM Mono", monospace';
+    ctx.fillStyle = 'rgba(77,150,255,0.5)';
+    ctx.textAlign = 'left'; ctx.fillText('INPUT', barX, barY + 16);
+    ctx.fillStyle = 'rgba(107,203,119,0.5)';
+    ctx.textAlign = 'right'; ctx.fillText('OUTPUT', barX + barW, barY + 16);
+
+    ctx.font = '300 10px "DM Mono", monospace';
+    ctx.fillStyle = 'rgba(255,255,255,0.1)';
+    ctx.textAlign = 'center';
+    ctx.fillText('← move mouse to control data flow · click to inject batch →', W / 2, barY - 10);
+
+    requestAnimationFrame(draw);
+  }
+  draw();
+})();
+</script>
+</body>
+</html>

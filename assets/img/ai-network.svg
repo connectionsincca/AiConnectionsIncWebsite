@@ -1,0 +1,113 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 440" style="overflow:visible;">
+<defs>
+  <filter id="glow" x="-60%" y="-60%" width="220%" height="220%">
+    <feGaussianBlur stdDeviation="5" result="b"/>
+    <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+  </filter>
+  <filter id="glow-lg" x="-80%" y="-80%" width="260%" height="260%">
+    <feGaussianBlur stdDeviation="18" result="b"/>
+    <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+  </filter>
+  <radialGradient id="nb" cx="35%" cy="35%" r="65%">
+    <stop offset="0%" stop-color="#a8caff"/>
+    <stop offset="100%" stop-color="#4d96ff"/>
+  </radialGradient>
+  <radialGradient id="nv" cx="35%" cy="35%" r="65%">
+    <stop offset="0%" stop-color="#e2c9ff"/>
+    <stop offset="100%" stop-color="#c77dff"/>
+  </radialGradient>
+  <radialGradient id="nc" cx="35%" cy="35%" r="65%">
+    <stop offset="0%" stop-color="#b8f4ff"/>
+    <stop offset="100%" stop-color="#00d4ff"/>
+  </radialGradient>
+</defs>
+
+<!-- Ambient blobs -->
+<circle cx="185" cy="220" r="170" fill="rgba(77,150,255,0.055)" filter="url(#glow-lg)"/>
+<circle cx="575" cy="220" r="140" fill="rgba(199,125,255,0.055)" filter="url(#glow-lg)"/>
+<circle cx="380" cy="220" r="100" fill="rgba(0,212,255,0.03)" filter="url(#glow-lg)"/>
+
+<!-- Generated layers -->
+<g id="eg" fill="none" stroke-linecap="round"/>
+<g id="ng"/>
+<g id="pg"/>
+<g id="lb" font-family="'DM Mono',monospace" font-size="9" fill="rgba(255,255,255,0.18)" letter-spacing="2" text-anchor="middle"/>
+
+<script type="text/javascript"><![CDATA[
+const NS = 'http://www.w3.org/2000/svg';
+function mk(tag, a, p) {
+  const e = document.createElementNS(NS, tag);
+  for (const [k,v] of Object.entries(a)) e.setAttribute(k, String(v));
+  if (p) p.appendChild(e);
+  return e;
+}
+const eg = document.getElementById('eg');
+const ng = document.getElementById('ng');
+const pg = document.getElementById('pg');
+const lb = document.getElementById('lb');
+
+const arch = [
+  { x: 72,  ys: [85, 175, 265, 355],               label: 'INPUT'   },
+  { x: 212, ys: [52, 138, 220, 308, 392],           label: 'LAYER 1' },
+  { x: 362, ys: [38, 110, 182, 254, 328, 402],      label: 'LAYER 2' },
+  { x: 508, ys: [52, 138, 220, 308, 392],           label: 'LAYER 3' },
+  { x: 648, ys: [128, 230, 332],                    label: 'OUTPUT'  }
+];
+
+const fills  = ['url(#nb)', 'url(#nv)', 'url(#nc)'];
+const pCols  = ['#7ab4ff',  '#d4a8ff',  '#60e8ff'];
+
+/* ── Edges ── */
+const edgeDefs = [];
+arch.forEach((layer, li) => {
+  if (li >= arch.length - 1) return;
+  const nxt = arch[li + 1];
+  layer.ys.forEach(ay => {
+    nxt.ys.forEach(by => {
+      if (Math.random() < 0.53) {
+        const mx = (layer.x + nxt.x) / 2;
+        const pathStr = `M${layer.x},${ay} C${mx},${ay} ${mx},${by} ${nxt.x},${by}`;
+        const alpha = (0.09 + Math.random() * 0.12).toFixed(3);
+        const hue = 140 + Math.floor(Math.random() * 80);
+        mk('path', { d: pathStr, stroke: `rgba(90,${hue},255,${alpha})`, 'stroke-width': '0.8', fill: 'none' }, eg);
+        edgeDefs.push({ pathStr, li });
+      }
+    });
+  });
+});
+
+/* ── Nodes ── */
+arch.forEach(layer => {
+  mk('text', { x: layer.x, y: 428, 'text-anchor': 'middle' }, lb).textContent = layer.label;
+  layer.ys.forEach(y => {
+    const dur  = (2.2 + Math.random() * 2.1).toFixed(2);
+    const beg  = (Math.random() * 3.5).toFixed(2);
+    const fill = fills[Math.floor(Math.random() * fills.length)];
+
+    // Expanding ring
+    const ring = mk('circle', { cx: layer.x, cy: y, r: 13, fill: 'none', stroke: 'rgba(100,160,255,0.14)', 'stroke-width': '1.2' }, ng);
+    mk('animate', { attributeName: 'r',       values: '13;22;13', dur: dur+'s', begin: beg+'s', repeatCount: 'indefinite' }, ring);
+    mk('animate', { attributeName: 'opacity', values: '0.45;0;0.45', dur: dur+'s', begin: beg+'s', repeatCount: 'indefinite' }, ring);
+
+    // Core node
+    const node = mk('circle', { cx: layer.x, cy: y, r: 6, fill, filter: 'url(#glow)' }, ng);
+    mk('animate', { attributeName: 'r',       values: '5.5;7.2;5.5', dur: dur+'s', begin: beg+'s', repeatCount: 'indefinite' }, node);
+    mk('animate', { attributeName: 'opacity', values: '0.72;1;0.72',  dur: dur+'s', begin: beg+'s', repeatCount: 'indefinite' }, node);
+  });
+});
+
+/* ── Data pulses ── */
+const numP = Math.floor(edgeDefs.length * 0.40);
+[...edgeDefs].sort(() => Math.random() - 0.5).slice(0, numP).forEach(({ pathStr, li }) => {
+  const dur = (0.85 + Math.random() * 1.5).toFixed(2);
+  const beg = (Math.random() * 6).toFixed(2);
+  const sz  = (2.5 + Math.random() * 1.5).toFixed(1);
+  const p   = mk('circle', { r: sz, fill: pCols[li % pCols.length], filter: 'url(#glow)' }, pg);
+  mk('animateMotion', {
+    path: pathStr, dur: dur + 's', begin: beg + 's',
+    repeatCount: 'indefinite', calcMode: 'spline',
+    keySplines: '0.42 0 0.58 1', keyTimes: '0;1'
+  }, p);
+});
+]]></script>
+</svg>

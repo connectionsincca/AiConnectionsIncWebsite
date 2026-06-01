@@ -1,0 +1,238 @@
+<svg viewBox="0 0 700 440" xmlns="http://www.w3.org/2000/svg" font-family="'DM Mono',monospace">
+<defs>
+  <filter id="dg"><feGaussianBlur stdDeviation="4" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+  <filter id="dg2"><feGaussianBlur stdDeviation="8" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+  <linearGradient id="bar-b" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0%" stop-color="#4d96ff" stop-opacity="0.9"/>
+    <stop offset="100%" stop-color="#4d96ff" stop-opacity="0.3"/>
+  </linearGradient>
+  <linearGradient id="bar-v" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0%" stop-color="#c77dff" stop-opacity="0.9"/>
+    <stop offset="100%" stop-color="#c77dff" stop-opacity="0.3"/>
+  </linearGradient>
+  <linearGradient id="bar-c" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0%" stop-color="#6bcb77" stop-opacity="0.9"/>
+    <stop offset="100%" stop-color="#6bcb77" stop-opacity="0.3"/>
+  </linearGradient>
+  <linearGradient id="line-g" x1="0" y1="0" x2="1" y2="0">
+    <stop offset="0%" stop-color="#4d96ff"/>
+    <stop offset="100%" stop-color="#c77dff"/>
+  </linearGradient>
+  <clipPath id="chartclip"><rect x="148" y="230" width="380" height="140"/></clipPath>
+  <clipPath id="win"><rect x="1" y="38" width="698" height="401" rx="0"/></clipPath>
+</defs>
+
+<!-- ── Window shell ── -->
+<rect width="700" height="440" rx="14" fill="#08080f" stroke="rgba(255,255,255,0.09)" stroke-width="1"/>
+<!-- Titlebar -->
+<rect width="700" height="38" rx="14" fill="#0d0d1e"/>
+<rect y="26" width="700" height="12" fill="#0d0d1e"/>
+<!-- Dots -->
+<circle cx="22" cy="19" r="5.5" fill="#ff5f5a" opacity="0.8"/>
+<circle cx="42" cy="19" r="5.5" fill="#febc2e" opacity="0.8"/>
+<circle cx="62" cy="19" r="5.5" fill="#28c840" opacity="0.8"/>
+<!-- Title -->
+<text x="350" y="24" text-anchor="middle" font-size="9.5" fill="rgba(255,255,255,0.28)" letter-spacing="3">AI ANALYTICS — AI.CONNECTIONSINC</text>
+<!-- Blink cursor -->
+<rect x="522" y="15" width="5" height="8" fill="rgba(77,150,255,0.6)" rx="1">
+  <animate attributeName="opacity" values="1;0;1" dur="1.2s" repeatCount="indefinite"/>
+</rect>
+
+<g clip-path="url(#win)">
+  <!-- ── Left sidebar ── -->
+  <rect x="1" y="38" width="116" height="402" fill="#0b0b1a"/>
+  <line x1="117" y1="38" x2="117" y2="440" stroke="rgba(255,255,255,0.06)" stroke-width="1"/>
+
+  <!-- Active nav item -->
+  <rect x="1" y="58" width="3" height="22" fill="#4d96ff" rx="1.5"/>
+  <rect x="8" y="56" width="108" height="26" rx="6" fill="rgba(77,150,255,0.09)"/>
+  <text x="24" y="73" font-size="8.5" fill="rgba(255,255,255,0.7)" letter-spacing="1">OVERVIEW</text>
+
+  <text x="24" y="104" font-size="8" fill="rgba(255,255,255,0.22)" letter-spacing="1">REPORTS</text>
+  <text x="24" y="124" font-size="8" fill="rgba(255,255,255,0.22)" letter-spacing="1">AUTOMATION</text>
+  <text x="24" y="144" font-size="8" fill="rgba(255,255,255,0.22)" letter-spacing="1">ANALYTICS</text>
+  <text x="24" y="164" font-size="8" fill="rgba(255,255,255,0.22)" letter-spacing="1">CLIENTS</text>
+  <text x="24" y="184" font-size="8" fill="rgba(255,255,255,0.22)" letter-spacing="1">SETTINGS</text>
+
+  <!-- Sidebar health bars -->
+  <text x="14" y="310" font-size="7" fill="rgba(255,255,255,0.2)" letter-spacing="1">SYSTEM HEALTH</text>
+  <rect x="14" y="318" width="88" height="5" rx="2.5" fill="rgba(255,255,255,0.05)"/>
+  <rect x="14" y="318" width="0" height="5" rx="2.5" fill="#4d96ff" opacity="0.75">
+    <animate attributeName="width" from="0" to="78" dur="1.8s" begin="0.4s" fill="freeze"/>
+  </rect>
+  <text x="106" y="323" font-size="6.5" fill="rgba(77,150,255,0.7)">89%</text>
+
+  <rect x="14" y="332" width="88" height="5" rx="2.5" fill="rgba(255,255,255,0.05)"/>
+  <rect x="14" y="332" width="0" height="5" rx="2.5" fill="#c77dff" opacity="0.75">
+    <animate attributeName="width" from="0" to="58" dur="1.8s" begin="0.7s" fill="freeze"/>
+  </rect>
+  <text x="106" y="337" font-size="6.5" fill="rgba(199,125,255,0.7)">66%</text>
+
+  <rect x="14" y="346" width="88" height="5" rx="2.5" fill="rgba(255,255,255,0.05)"/>
+  <rect x="14" y="346" width="0" height="5" rx="2.5" fill="#6bcb77" opacity="0.75">
+    <animate attributeName="width" from="0" to="72" dur="1.8s" begin="1.0s" fill="freeze"/>
+  </rect>
+  <text x="106" y="351" font-size="6.5" fill="rgba(107,203,119,0.7)">82%</text>
+
+  <text x="14" y="318" dx="0" dy="18" font-size="7" fill="rgba(255,255,255,0.14)">CPU</text>
+  <text x="14" y="332" dx="0" dy="18" font-size="7" fill="rgba(255,255,255,0.14)">MEM</text>
+  <text x="14" y="346" dx="0" dy="18" font-size="7" fill="rgba(255,255,255,0.14)">API</text>
+
+  <!-- ── Main area ── -->
+  <rect x="118" y="38" width="581" height="402" fill="#08080e"/>
+
+  <!-- Section title -->
+  <text x="136" y="64" font-size="11" fill="rgba(255,255,255,0.7)" letter-spacing="1" font-weight="600">Overview</text>
+  <text x="136" y="79" font-size="8" fill="rgba(255,255,255,0.25)" letter-spacing="1">Real-time AI performance metrics</text>
+
+  <!-- ── Metric cards ── -->
+  <!-- Card 1: Revenue -->
+  <rect x="136" y="92" width="120" height="72" rx="8" fill="rgba(77,150,255,0.07)" stroke="rgba(77,150,255,0.2)" stroke-width="1"/>
+  <rect x="136" y="92" width="120" height="3" rx="1.5" fill="#4d96ff" opacity="0.5"/>
+  <text x="150" y="111" font-size="7.5" fill="rgba(255,255,255,0.35)" letter-spacing="1.5">REVENUE</text>
+  <text x="150" y="137" font-size="24" font-family="'Space Grotesk',sans-serif" font-weight="700" fill="#fff">+28%</text>
+  <text x="150" y="155" font-size="7.5" fill="#4d96ff">↑ vs last quarter</text>
+
+  <!-- Card 2: Automations -->
+  <rect x="268" y="92" width="120" height="72" rx="8" fill="rgba(199,125,255,0.07)" stroke="rgba(199,125,255,0.2)" stroke-width="1"/>
+  <rect x="268" y="92" width="120" height="3" rx="1.5" fill="#c77dff" opacity="0.5"/>
+  <text x="282" y="111" font-size="7.5" fill="rgba(255,255,255,0.35)" letter-spacing="1.5">AUTOMATIONS</text>
+  <text x="282" y="137" font-size="24" font-family="'Space Grotesk',sans-serif" font-weight="700" fill="#fff">1,847</text>
+  <text x="282" y="155" font-size="7.5" fill="#c77dff">↑ Active daily</text>
+
+  <!-- Card 3: Hours saved -->
+  <rect x="400" y="92" width="120" height="72" rx="8" fill="rgba(107,203,119,0.07)" stroke="rgba(107,203,119,0.2)" stroke-width="1"/>
+  <rect x="400" y="92" width="120" height="3" rx="1.5" fill="#6bcb77" opacity="0.5"/>
+  <text x="414" y="111" font-size="7.5" fill="rgba(255,255,255,0.35)" letter-spacing="1.5">HRS SAVED</text>
+  <text x="414" y="137" font-size="24" font-family="'Space Grotesk',sans-serif" font-weight="700" fill="#fff">847</text>
+  <text x="414" y="155" font-size="7.5" fill="#6bcb77">↑ This week</text>
+
+  <!-- Card 4: Satisfaction -->
+  <rect x="532" y="92" width="155" height="72" rx="8" fill="rgba(255,217,60,0.07)" stroke="rgba(255,217,60,0.18)" stroke-width="1"/>
+  <rect x="532" y="92" width="155" height="3" rx="1.5" fill="#ffd93d" opacity="0.5"/>
+  <text x="546" y="111" font-size="7.5" fill="rgba(255,255,255,0.35)" letter-spacing="1.5">SATISFACTION</text>
+  <text x="546" y="137" font-size="24" font-family="'Space Grotesk',sans-serif" font-weight="700" fill="#fff">95%</text>
+  <text x="546" y="155" font-size="7.5" fill="#ffd93d">↑ Client avg</text>
+
+  <!-- Divider -->
+  <line x1="136" y1="176" x2="680" y2="176" stroke="rgba(255,255,255,0.05)" stroke-width="1"/>
+
+  <!-- ── Bar Chart ── -->
+  <text x="136" y="196" font-size="8" fill="rgba(255,255,255,0.28)" letter-spacing="2">AI TASKS COMPLETED / MONTH</text>
+
+  <!-- Y-axis -->
+  <line x1="162" y1="204" x2="162" y2="340" stroke="rgba(255,255,255,0.07)" stroke-width="1"/>
+  <!-- X-axis -->
+  <line x1="162" y1="340" x2="530" y2="340" stroke="rgba(255,255,255,0.07)" stroke-width="1"/>
+  <!-- Y gridlines -->
+  <line x1="162" y1="249" x2="530" y2="249" stroke="rgba(255,255,255,0.04)" stroke-width="1" stroke-dasharray="4,4"/>
+  <line x1="162" y1="294" x2="530" y2="294" stroke="rgba(255,255,255,0.04)" stroke-width="1" stroke-dasharray="4,4"/>
+  <!-- Y labels -->
+  <text x="158" y="207" text-anchor="end" font-size="7" fill="rgba(255,255,255,0.2)">600</text>
+  <text x="158" y="252" text-anchor="end" font-size="7" fill="rgba(255,255,255,0.2)">400</text>
+  <text x="158" y="297" text-anchor="end" font-size="7" fill="rgba(255,255,255,0.2)">200</text>
+
+  <!-- Bars -->
+  <g>
+    <!-- Jan -->
+    <rect x="176" y="340" width="34" height="0" rx="3" fill="url(#bar-b)">
+      <animate attributeName="height" from="0" to="88" dur="1s" begin="0.3s" fill="freeze" calcMode="spline" keySplines="0.22 1 0.36 1"/>
+      <animate attributeName="y" from="340" to="252" dur="1s" begin="0.3s" fill="freeze" calcMode="spline" keySplines="0.22 1 0.36 1"/>
+    </rect>
+    <text x="193" y="354" text-anchor="middle" font-size="7.5" fill="rgba(255,255,255,0.22)">JAN</text>
+
+    <!-- Feb -->
+    <rect x="220" y="340" width="34" height="0" rx="3" fill="url(#bar-b)">
+      <animate attributeName="height" from="0" to="108" dur="1s" begin="0.5s" fill="freeze" calcMode="spline" keySplines="0.22 1 0.36 1"/>
+      <animate attributeName="y" from="340" to="232" dur="1s" begin="0.5s" fill="freeze" calcMode="spline" keySplines="0.22 1 0.36 1"/>
+    </rect>
+    <text x="237" y="354" text-anchor="middle" font-size="7.5" fill="rgba(255,255,255,0.22)">FEB</text>
+
+    <!-- Mar -->
+    <rect x="264" y="340" width="34" height="0" rx="3" fill="url(#bar-b)">
+      <animate attributeName="height" from="0" to="98" dur="1s" begin="0.7s" fill="freeze" calcMode="spline" keySplines="0.22 1 0.36 1"/>
+      <animate attributeName="y" from="340" to="242" dur="1s" begin="0.7s" fill="freeze" calcMode="spline" keySplines="0.22 1 0.36 1"/>
+    </rect>
+    <text x="281" y="354" text-anchor="middle" font-size="7.5" fill="rgba(255,255,255,0.22)">MAR</text>
+
+    <!-- Apr -->
+    <rect x="308" y="340" width="34" height="0" rx="3" fill="url(#bar-v)">
+      <animate attributeName="height" from="0" to="122" dur="1s" begin="0.9s" fill="freeze" calcMode="spline" keySplines="0.22 1 0.36 1"/>
+      <animate attributeName="y" from="340" to="218" dur="1s" begin="0.9s" fill="freeze" calcMode="spline" keySplines="0.22 1 0.36 1"/>
+    </rect>
+    <text x="325" y="354" text-anchor="middle" font-size="7.5" fill="rgba(255,255,255,0.22)">APR</text>
+
+    <!-- May -->
+    <rect x="352" y="340" width="34" height="0" rx="3" fill="url(#bar-v)">
+      <animate attributeName="height" from="0" to="115" dur="1s" begin="1.1s" fill="freeze" calcMode="spline" keySplines="0.22 1 0.36 1"/>
+      <animate attributeName="y" from="340" to="225" dur="1s" begin="1.1s" fill="freeze" calcMode="spline" keySplines="0.22 1 0.36 1"/>
+    </rect>
+    <text x="369" y="354" text-anchor="middle" font-size="7.5" fill="rgba(255,255,255,0.22)">MAY</text>
+
+    <!-- Jun -->
+    <rect x="396" y="340" width="34" height="0" rx="3" fill="url(#bar-c)">
+      <animate attributeName="height" from="0" to="136" dur="1s" begin="1.3s" fill="freeze" calcMode="spline" keySplines="0.22 1 0.36 1"/>
+      <animate attributeName="y" from="340" to="204" dur="1s" begin="1.3s" fill="freeze" calcMode="spline" keySplines="0.22 1 0.36 1"/>
+    </rect>
+    <text x="413" y="354" text-anchor="middle" font-size="7.5" fill="rgba(255,255,255,0.22)">JUN</text>
+
+    <!-- Jul — record high bar with glow -->
+    <rect x="440" y="340" width="34" height="0" rx="3" fill="url(#bar-c)" filter="url(#dg)">
+      <animate attributeName="height" from="0" to="132" dur="1s" begin="1.5s" fill="freeze" calcMode="spline" keySplines="0.22 1 0.36 1"/>
+      <animate attributeName="y" from="340" to="208" dur="1s" begin="1.5s" fill="freeze" calcMode="spline" keySplines="0.22 1 0.36 1"/>
+    </rect>
+    <text x="457" y="354" text-anchor="middle" font-size="7.5" fill="rgba(255,255,255,0.22)">JUL</text>
+    <!-- "Best month" badge -->
+    <rect x="438" y="196" width="38" height="14" rx="3" fill="rgba(107,203,119,0.2)" stroke="rgba(107,203,119,0.35)" stroke-width="0.8" opacity="0">
+      <animate attributeName="opacity" from="0" to="1" dur="0.4s" begin="2.6s" fill="freeze"/>
+    </rect>
+    <text x="457" y="207" text-anchor="middle" font-size="6.5" fill="#6bcb77" opacity="0">
+      <animate attributeName="opacity" from="0" to="1" dur="0.4s" begin="2.6s" fill="freeze"/>
+      BEST
+    </text>
+  </g>
+
+  <!-- ── Line chart ── -->
+  <text x="548" y="196" font-size="8" fill="rgba(255,255,255,0.28)" letter-spacing="2">GROWTH</text>
+  <line x1="548" y1="204" x2="548" y2="340" stroke="rgba(255,255,255,0.07)" stroke-width="1"/>
+  <line x1="548" y1="340" x2="685" y2="340" stroke="rgba(255,255,255,0.07)" stroke-width="1"/>
+
+  <!-- Line path -->
+  <path d="M548,318 L566,305 L584,298 L602,282 L620,268 L638,255 L656,238 L674,220 L685,208"
+    stroke="url(#line-g)" stroke-width="2" fill="none" stroke-linecap="round"
+    stroke-dasharray="260" stroke-dashoffset="260">
+    <animate attributeName="stroke-dashoffset" from="260" to="0" dur="2.2s" begin="1s" fill="freeze" calcMode="spline" keySplines="0.4 0 0.2 1"/>
+  </path>
+
+  <!-- Area fill -->
+  <path d="M548,318 L566,305 L584,298 L602,282 L620,268 L638,255 L656,238 L674,220 L685,208 L685,340 L548,340 Z"
+    fill="url(#line-g)" opacity="0.08">
+    <animate attributeName="opacity" from="0" to="0.08" dur="2.2s" begin="1s" fill="freeze"/>
+  </path>
+
+  <!-- End dot -->
+  <circle cx="685" cy="208" r="4" fill="#c77dff" filter="url(#dg)" opacity="0">
+    <animate attributeName="opacity" from="0" to="1" dur="0.3s" begin="3.2s" fill="freeze"/>
+    <animate attributeName="r" values="4;6;4" dur="2s" begin="3.5s" repeatCount="indefinite"/>
+  </circle>
+
+  <!-- Live indicator -->
+  <circle cx="665" cy="192" r="3.5" fill="#6bcb77" filter="url(#dg)">
+    <animate attributeName="opacity" values="1;0.3;1" dur="1.6s" repeatCount="indefinite"/>
+  </circle>
+  <text x="672" y="196" font-size="7.5" fill="rgba(107,203,119,0.7)">LIVE</text>
+
+  <!-- Decorative right column divider -->
+  <line x1="536" y1="176" x2="536" y2="375" stroke="rgba(255,255,255,0.05)" stroke-width="1"/>
+
+  <!-- Bottom status bar -->
+  <rect x="118" y="406" width="581" height="34" fill="#0a0a1a"/>
+  <line x1="118" y1="406" x2="699" y2="406" stroke="rgba(255,255,255,0.06)" stroke-width="1"/>
+  <text x="136" y="426" font-size="7.5" fill="rgba(255,255,255,0.2)" letter-spacing="1">LAST SYNC: 2 MIN AGO</text>
+  <circle cx="250" cy="422" r="3" fill="#6bcb77">
+    <animate attributeName="opacity" values="1;0.4;1" dur="2s" repeatCount="indefinite"/>
+  </circle>
+  <text x="258" y="426" font-size="7.5" fill="rgba(107,203,119,0.5)" letter-spacing="1">ALL SYSTEMS OPERATIONAL</text>
+  <text x="670" y="426" text-anchor="end" font-size="7.5" fill="rgba(255,255,255,0.15)" letter-spacing="1">v2.4.1</text>
+</g>
+</svg>

@@ -1,0 +1,904 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI.ConnectionsInc — Empowering Canadian Businesses with AI</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <style>
+        :root {
+            --cyan: #00f5ff;
+            --blue: #0066ff;
+            --purple: #7b2fff;
+            --dark: #050510;
+            --dark2: #0a0a1a;
+            --dark3: #0f0f2a;
+            --glass: rgba(255,255,255,0.04);
+            --glass-border: rgba(255,255,255,0.08);
+            --text: #e2e8f0;
+            --text-muted: #94a3b8;
+            --gradient: linear-gradient(135deg, #00f5ff, #0066ff, #7b2fff);
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html { scroll-behavior: smooth; }
+        body { font-family: 'Inter', sans-serif; background: var(--dark); color: var(--text); overflow-x: hidden; line-height: 1.6; }
+        ::-webkit-scrollbar { width: 5px; }
+        ::-webkit-scrollbar-track { background: var(--dark2); }
+        ::-webkit-scrollbar-thumb { background: var(--blue); border-radius: 3px; }
+        h1,h2,h3,h4 { font-family: 'Space Grotesk', sans-serif; line-height: 1.2; }
+        .gradient-text { background: var(--gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+
+        /* Canvas + Grid */
+        #particles-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 0; pointer-events: none; }
+        .grid-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 0; pointer-events: none;
+            background-image: linear-gradient(rgba(0,102,255,0.025) 1px, transparent 1px), linear-gradient(90deg, rgba(0,102,255,0.025) 1px, transparent 1px);
+            background-size: 60px 60px;
+        }
+
+        /* Nav */
+        nav {
+            position: fixed; top: 0; left: 0; right: 0; z-index: 1000;
+            padding: 22px 48px; display: flex; align-items: center; justify-content: space-between;
+            transition: all 0.3s ease;
+        }
+        nav.scrolled { background: rgba(5,5,16,0.96); backdrop-filter: blur(24px); border-bottom: 1px solid var(--glass-border); padding: 14px 48px; }
+        .nav-logo { font-family: 'Space Grotesk', sans-serif; font-size: 1.35rem; font-weight: 700; background: var(--gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+        .nav-links { display: flex; gap: 36px; list-style: none; }
+        .nav-links a { color: var(--text-muted); text-decoration: none; font-size: 0.88rem; font-weight: 500; transition: color 0.3s; position: relative; }
+        .nav-links a::after { content: ''; position: absolute; bottom: -4px; left: 0; width: 0; height: 2px; background: var(--cyan); transition: width 0.3s; }
+        .nav-links a:hover { color: var(--cyan); }
+        .nav-links a:hover::after { width: 100%; }
+        .nav-cta { background: var(--gradient) !important; color: white !important; padding: 10px 26px !important; border-radius: 50px; font-weight: 600 !important; -webkit-text-fill-color: white !important; }
+        .nav-cta::after { display: none !important; }
+        .hamburger { display: none; flex-direction: column; gap: 5px; cursor: pointer; }
+        .hamburger span { width: 24px; height: 2px; background: var(--cyan); transition: all 0.3s; }
+
+        /* Mobile Nav */
+        .mobile-nav {
+            display: none; position: fixed; inset: 0; background: rgba(5,5,16,0.98);
+            backdrop-filter: blur(20px); z-index: 999; flex-direction: column;
+            align-items: center; justify-content: center; gap: 36px;
+        }
+        .mobile-nav.open { display: flex; }
+        .mobile-nav a { color: var(--text); text-decoration: none; font-size: 1.6rem; font-weight: 700; transition: color 0.3s; }
+        .mobile-nav a:hover { color: var(--cyan); }
+        .mobile-nav-close { position: absolute; top: 22px; right: 22px; background: none; border: none; color: var(--text-muted); font-size: 2rem; cursor: pointer; }
+
+        /* Sections */
+        section { position: relative; z-index: 1; padding: 110px 48px; }
+        .container { max-width: 1200px; margin: 0 auto; }
+        .text-center { text-align: center; }
+        .section-tag {
+            display: inline-block; background: rgba(0,245,255,0.08); border: 1px solid rgba(0,245,255,0.25);
+            color: var(--cyan); padding: 6px 18px; border-radius: 50px; font-size: 0.72rem;
+            font-weight: 700; letter-spacing: 2.5px; text-transform: uppercase; margin-bottom: 14px;
+        }
+        .section-title { font-size: clamp(2rem, 4vw, 3rem); font-weight: 800; margin-bottom: 14px; }
+        .section-subtitle { color: var(--text-muted); font-size: 1.05rem; max-width: 580px; margin: 0 auto 64px; }
+        .section-divider { height: 1px; background: var(--glass-border); max-width: 1200px; margin: 0 auto; }
+
+        /* Glass Card */
+        .glass-card {
+            background: var(--glass); border: 1px solid var(--glass-border); border-radius: 20px;
+            padding: 36px; backdrop-filter: blur(20px);
+            transition: transform 0.3s, border-color 0.3s, box-shadow 0.3s;
+        }
+        .glass-card:hover { transform: translateY(-8px); border-color: rgba(0,245,255,0.25); box-shadow: 0 24px 64px rgba(0,102,255,0.12); }
+
+        /* Reveal */
+        .reveal { opacity: 0; transform: translateY(36px); transition: opacity 0.8s ease, transform 0.8s ease; }
+        .reveal.visible { opacity: 1; transform: translateY(0); }
+        .rd1 { transition-delay: 0.1s; } .rd2 { transition-delay: 0.2s; } .rd3 { transition-delay: 0.3s; }
+        .rd4 { transition-delay: 0.4s; } .rd5 { transition-delay: 0.5s; }
+
+        /* ─── HERO ─── */
+        #hero { min-height: 100vh; display: flex; align-items: center; justify-content: center; text-align: center; padding: 140px 48px 100px; }
+        .hero-content { max-width: 920px; }
+        .hero-badge {
+            display: inline-flex; align-items: center; gap: 10px;
+            background: rgba(0,245,255,0.07); border: 1px solid rgba(0,245,255,0.2);
+            padding: 8px 22px; border-radius: 50px; font-size: 0.82rem; color: var(--cyan);
+            margin-bottom: 36px; animation: fadeInDown 0.8s ease both;
+        }
+        .hero-badge .dot { width: 8px; height: 8px; background: var(--cyan); border-radius: 50%; animation: pulse 2s infinite; }
+        .hero-title { font-size: clamp(2.8rem, 7.5vw, 5.8rem); font-weight: 900; line-height: 1.05; margin-bottom: 28px; animation: fadeInUp 0.8s ease 0.2s both; min-height: 2.2em; }
+        .hero-subtitle { font-size: clamp(1rem, 2vw, 1.25rem); color: var(--text-muted); max-width: 680px; margin: 0 auto 20px; animation: fadeInUp 0.8s ease 0.35s both; }
+        .hero-warning {
+            display: inline-flex; align-items: center; gap: 10px;
+            background: rgba(255,165,0,0.07); border: 1px solid rgba(255,165,0,0.22);
+            color: #ffb347; padding: 12px 26px; border-radius: 12px;
+            font-size: 0.92rem; font-weight: 500; margin-bottom: 44px;
+            animation: fadeInUp 0.8s ease 0.45s both;
+        }
+        .hero-buttons { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; animation: fadeInUp 0.8s ease 0.55s both; }
+        .btn-primary {
+            background: var(--gradient); color: white; padding: 17px 44px; border-radius: 50px;
+            font-size: 1rem; font-weight: 700; text-decoration: none;
+            transition: transform 0.3s, box-shadow 0.3s; box-shadow: 0 0 36px rgba(0,102,255,0.4);
+        }
+        .btn-primary:hover { transform: translateY(-3px); box-shadow: 0 0 56px rgba(0,102,255,0.6); }
+        .btn-secondary {
+            background: var(--glass); border: 1px solid var(--glass-border); color: var(--text);
+            padding: 17px 44px; border-radius: 50px; font-size: 1rem; font-weight: 600;
+            text-decoration: none; backdrop-filter: blur(10px); transition: all 0.3s;
+        }
+        .btn-secondary:hover { border-color: var(--cyan); color: var(--cyan); transform: translateY(-3px); }
+        .hero-stats { display: flex; justify-content: center; gap: 64px; margin-top: 90px; flex-wrap: wrap; animation: fadeInUp 0.8s ease 0.75s both; }
+        .stat { text-align: center; }
+        .stat-number { font-family: 'Space Grotesk', sans-serif; font-size: 2.6rem; font-weight: 900; background: var(--gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+        .stat-label { color: var(--text-muted); font-size: 0.8rem; margin-top: 4px; }
+
+        /* Typewriter */
+        .tw-cursor { display: inline-block; width: 3px; background: var(--cyan); animation: blink 1s infinite; vertical-align: middle; height: 0.8em; margin-left: 3px; border-radius: 2px; }
+        @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+
+        /* ─── VISION / MISSION ─── */
+        #vision-mission { background: none; }
+        .vm-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; margin-top: 56px; }
+        .vm-card { position: relative; overflow: hidden; }
+        .vm-card::before { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 3px; background: var(--gradient); }
+        .vm-icon { width: 58px; height: 58px; background: var(--gradient); border-radius: 16px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; margin-bottom: 22px; }
+        .vm-card h3 { font-size: 1.45rem; font-weight: 700; margin-bottom: 14px; }
+        .vm-card p { color: var(--text-muted); line-height: 1.85; }
+
+        /* ─── URGENCY ─── */
+        #urgency { background: none; }
+        .urgency-banner {
+            background: linear-gradient(135deg, rgba(255,100,0,0.04), rgba(255,0,60,0.04));
+            border: 1px solid rgba(255,165,0,0.18); border-radius: 28px; padding: 72px 64px;
+            text-align: center; position: relative; overflow: hidden;
+        }
+        .urgency-banner::before {
+            content: ''; position: absolute; top: -60%; left: -60%; width: 220%; height: 220%;
+            background: radial-gradient(circle, rgba(255,150,0,0.03) 0%, transparent 55%);
+            animation: rotate 22s linear infinite;
+        }
+        @keyframes rotate { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
+        .urgency-title { font-size: clamp(1.8rem, 4vw, 3rem); font-weight: 900; margin-bottom: 18px; position: relative; z-index: 1; }
+        .urgency-text { color: var(--text-muted); font-size: 1.05rem; max-width: 680px; margin: 0 auto 48px; position: relative; z-index: 1; line-height: 1.8; }
+        .urgency-stats { display: flex; justify-content: center; gap: 56px; flex-wrap: wrap; position: relative; z-index: 1; }
+        .urgency-stat { text-align: center; }
+        .urgency-stat-num { font-size: 2.6rem; font-weight: 900; color: #ffa500; font-family: 'Space Grotesk', sans-serif; }
+        .urgency-stat-label { color: var(--text-muted); font-size: 0.82rem; margin-top: 6px; line-height: 1.5; }
+
+        /* ─── SERVICES ─── */
+        #services { background: var(--dark2); }
+        .services-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 22px; margin-top: 60px; }
+        .service-card { position: relative; overflow: hidden; }
+        .service-icon { width: 54px; height: 54px; background: rgba(0,245,255,0.08); border: 1px solid rgba(0,245,255,0.18); border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 1.35rem; color: var(--cyan); margin-bottom: 18px; transition: all 0.3s; }
+        .service-card:hover .service-icon { background: rgba(0,245,255,0.18); transform: scale(1.08); }
+        .service-card h3 { font-size: 1.15rem; font-weight: 700; margin-bottom: 11px; }
+        .service-card p { color: var(--text-muted); font-size: 0.88rem; line-height: 1.75; }
+        .service-tag { display: inline-block; background: rgba(123,47,255,0.14); border: 1px solid rgba(123,47,255,0.28); color: #b89bff; padding: 4px 13px; border-radius: 50px; font-size: 0.72rem; font-weight: 700; margin-top: 16px; letter-spacing: 0.5px; }
+
+        /* ─── ABOUT ─── */
+        #about { background: none; }
+        .about-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 72px; align-items: center; }
+        .about-content h2 { font-size: clamp(1.8rem, 3.5vw, 2.7rem); font-weight: 900; margin-bottom: 18px; }
+        .about-content p { color: var(--text-muted); margin-bottom: 15px; line-height: 1.85; }
+        .about-features { list-style: none; margin-top: 24px; }
+        .about-features li { display: flex; align-items: center; gap: 13px; margin-bottom: 13px; color: var(--text-muted); font-size: 0.93rem; }
+        .check { width: 24px; height: 24px; background: rgba(0,245,255,0.09); border: 1px solid rgba(0,245,255,0.25); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--cyan); font-size: 0.65rem; flex-shrink: 0; }
+        .about-visual { position: relative; }
+        .about-main-card { background: var(--glass); border: 1px solid var(--glass-border); border-radius: 24px; padding: 36px; backdrop-filter: blur(20px); }
+        .canada-badge { display: flex; align-items: center; gap: 14px; background: rgba(255,0,0,0.06); border: 1px solid rgba(255,0,0,0.18); border-radius: 14px; padding: 16px 20px; margin-bottom: 24px; }
+        .canada-flag { font-size: 2rem; }
+        .canada-badge-text strong { display: block; font-size: 1rem; }
+        .canada-badge-text span { font-size: 0.8rem; color: var(--text-muted); }
+        .values-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .value-item { background: rgba(0,245,255,0.03); border: 1px solid rgba(0,245,255,0.09); border-radius: 12px; padding: 18px; text-align: center; transition: all 0.3s; }
+        .value-item:hover { border-color: rgba(0,245,255,0.2); background: rgba(0,245,255,0.06); }
+        .value-item .vi { font-size: 1.5rem; margin-bottom: 8px; }
+        .value-item span { font-size: 0.85rem; font-weight: 600; }
+        .float-badge {
+            position: absolute; background: rgba(10,10,26,0.9); border: 1px solid var(--glass-border);
+            backdrop-filter: blur(20px); border-radius: 12px; padding: 12px 18px;
+            font-size: 0.82rem; font-weight: 600; display: flex; align-items: center; gap: 8px;
+        }
+        .float-badge-1 { top: -16px; left: -20px; color: #4ade80; border-color: rgba(74,222,128,0.22); animation: float 4s ease-in-out infinite; }
+        .float-badge-2 { bottom: -16px; right: -20px; color: var(--cyan); border-color: rgba(0,245,255,0.22); animation: float 4s ease-in-out 2s infinite; }
+        .fdot { width: 8px; height: 8px; border-radius: 50%; background: currentColor; }
+        @keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-12px)} }
+
+        /* ─── TESTIMONIALS ─── */
+        #testimonials { background: var(--dark2); }
+        .testimonials-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 22px; margin-top: 60px; }
+        .testimonial-card { position: relative; }
+        .stars { color: #ffa500; font-size: 0.85rem; margin-bottom: 14px; letter-spacing: 2px; }
+        .quote-icon { font-size: 3.5rem; color: var(--cyan); opacity: 0.25; line-height: 1; margin-bottom: 12px; font-family: Georgia, serif; }
+        .testimonial-text { color: var(--text-muted); font-size: 0.9rem; line-height: 1.85; margin-bottom: 24px; font-style: italic; }
+        .testimonial-author { display: flex; align-items: center; gap: 12px; }
+        .author-avatar { width: 46px; height: 46px; border-radius: 50%; background: var(--gradient); display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 1rem; color: white; flex-shrink: 0; }
+        .author-name { font-weight: 700; font-size: 0.92rem; }
+        .author-title { color: var(--text-muted); font-size: 0.78rem; }
+        .author-loc { display: flex; align-items: center; gap: 4px; color: var(--cyan); font-size: 0.72rem; margin-top: 2px; }
+
+        /* ─── FAQ ─── */
+        #faq { background: none; }
+        .faq-list { max-width: 780px; margin: 60px auto 0; }
+        .faq-item { background: var(--glass); border: 1px solid var(--glass-border); border-radius: 16px; margin-bottom: 14px; overflow: hidden; transition: border-color 0.3s; }
+        .faq-item.active { border-color: rgba(0,245,255,0.28); }
+        .faq-question { padding: 22px 26px; display: flex; align-items: center; justify-content: space-between; cursor: pointer; font-weight: 600; font-size: 0.97rem; transition: color 0.3s; gap: 16px; }
+        .faq-question:hover, .faq-item.active .faq-question { color: var(--cyan); }
+        .faq-icon { width: 30px; height: 30px; min-width: 30px; background: rgba(0,245,255,0.08); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--cyan); font-size: 0.8rem; transition: transform 0.35s, background 0.3s; }
+        .faq-item.active .faq-icon { transform: rotate(45deg); background: rgba(0,245,255,0.18); }
+        .faq-answer { max-height: 0; overflow: hidden; transition: max-height 0.42s ease; }
+        .faq-answer-inner { padding: 0 26px 22px; color: var(--text-muted); line-height: 1.85; font-size: 0.92rem; }
+        .faq-item.active .faq-answer { max-height: 280px; }
+
+        /* ─── CONTACT ─── */
+        #contact { background: var(--dark2); }
+        .contact-grid { display: grid; grid-template-columns: 1fr 1.6fr; gap: 72px; align-items: start; }
+        .contact-info h2 { font-size: clamp(1.8rem, 3.5vw, 2.5rem); font-weight: 900; margin-bottom: 14px; }
+        .contact-info p { color: var(--text-muted); margin-bottom: 40px; line-height: 1.85; }
+        .contact-items { display: flex; flex-direction: column; gap: 20px; }
+        .contact-item { display: flex; align-items: center; gap: 16px; }
+        .contact-icon { width: 46px; height: 46px; background: rgba(0,245,255,0.08); border: 1px solid rgba(0,245,255,0.18); border-radius: 12px; display: flex; align-items: center; justify-content: center; color: var(--cyan); font-size: 1rem; flex-shrink: 0; }
+        .contact-item-text strong { font-weight: 700; display: block; font-size: 0.9rem; }
+        .contact-item-text span { color: var(--text-muted); font-size: 0.85rem; }
+        .contact-form { background: var(--glass); border: 1px solid var(--glass-border); border-radius: 24px; padding: 48px; backdrop-filter: blur(20px); }
+        .form-group { margin-bottom: 22px; }
+        .form-group label { display: block; font-size: 0.75rem; font-weight: 700; color: var(--text-muted); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 1.2px; }
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%; background: rgba(255,255,255,0.03); border: 1px solid var(--glass-border);
+            border-radius: 11px; padding: 13px 17px; color: var(--text); font-family: 'Inter', sans-serif;
+            font-size: 0.93rem; outline: none; transition: border-color 0.3s, box-shadow 0.3s;
+        }
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color: var(--cyan); box-shadow: 0 0 0 3px rgba(0,245,255,0.07); }
+        .form-group select option { background: var(--dark2); }
+        .form-group textarea { height: 110px; resize: vertical; }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+        .btn-submit {
+            width: 100%; background: var(--gradient); color: white; border: none; padding: 15px;
+            border-radius: 11px; font-size: 0.97rem; font-weight: 700; cursor: pointer;
+            transition: transform 0.3s, box-shadow 0.3s; font-family: 'Inter', sans-serif;
+        }
+        .btn-submit:hover { transform: translateY(-2px); box-shadow: 0 12px 36px rgba(0,102,255,0.4); }
+
+        /* ─── FOOTER ─── */
+        footer { background: var(--dark); border-top: 1px solid var(--glass-border); padding: 70px 48px 40px; position: relative; z-index: 1; }
+        .footer-grid { max-width: 1200px; margin: 0 auto 56px; display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 48px; }
+        .footer-logo { font-family: 'Space Grotesk', sans-serif; font-size: 1.35rem; font-weight: 700; background: var(--gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+        .footer-brand p { color: var(--text-muted); font-size: 0.87rem; margin-top: 14px; line-height: 1.75; }
+        .footer-col h4 { font-size: 0.8rem; font-weight: 800; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 20px; }
+        .footer-links { list-style: none; display: flex; flex-direction: column; gap: 11px; }
+        .footer-links a { color: var(--text-muted); text-decoration: none; font-size: 0.87rem; transition: color 0.3s; }
+        .footer-links a:hover { color: var(--cyan); }
+        .footer-bottom { max-width: 1200px; margin: 0 auto; padding-top: 28px; border-top: 1px solid var(--glass-border); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px; }
+        .footer-bottom p { color: var(--text-muted); font-size: 0.82rem; }
+        .footer-socials { display: flex; gap: 10px; }
+        .social-link { width: 36px; height: 36px; background: var(--glass); border: 1px solid var(--glass-border); border-radius: 9px; display: flex; align-items: center; justify-content: center; color: var(--text-muted); text-decoration: none; font-size: 0.88rem; transition: all 0.3s; }
+        .social-link:hover { border-color: var(--cyan); color: var(--cyan); transform: translateY(-2px); }
+
+        /* Keyframes */
+        @keyframes fadeInDown { from{opacity:0;transform:translateY(-20px)} to{opacity:1;transform:translateY(0)} }
+        @keyframes fadeInUp { from{opacity:0;transform:translateY(30px)} to{opacity:1;transform:translateY(0)} }
+        @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.45;transform:scale(0.8)} }
+
+        /* Responsive */
+        @media(max-width:1024px) {
+            .services-grid { grid-template-columns: repeat(2,1fr); }
+            .testimonials-grid { grid-template-columns: repeat(2,1fr); }
+            .footer-grid { grid-template-columns: 1fr 1fr; }
+        }
+        @media(max-width:768px) {
+            nav { padding: 16px 22px; }
+            nav.scrolled { padding: 12px 22px; }
+            .nav-links { display: none; }
+            .hamburger { display: flex; }
+            section { padding: 80px 22px; }
+            .vm-grid, .about-grid, .contact-grid { grid-template-columns: 1fr; gap: 32px; }
+            .services-grid, .testimonials-grid { grid-template-columns: 1fr; }
+            .footer-grid { grid-template-columns: 1fr; gap: 28px; }
+            .hero-stats { gap: 28px; }
+            .urgency-banner { padding: 40px 24px; }
+            .urgency-stats { gap: 28px; }
+            .contact-form { padding: 28px 20px; }
+            .form-row { grid-template-columns: 1fr; }
+            .float-badge { display: none; }
+        }
+    </style>
+</head>
+<body>
+
+<canvas id="particles-canvas"></canvas>
+<div class="grid-overlay"></div>
+
+<!-- Mobile Nav -->
+<div class="mobile-nav" id="mobileNav">
+    <button class="mobile-nav-close" onclick="closeMobileNav()">&#x2715;</button>
+    <a href="#hero" onclick="closeMobileNav()">Home</a>
+    <a href="#vision-mission" onclick="closeMobileNav()">Vision</a>
+    <a href="#services" onclick="closeMobileNav()">Services</a>
+    <a href="#about" onclick="closeMobileNav()">About</a>
+    <a href="#testimonials" onclick="closeMobileNav()">Clients</a>
+    <a href="#faq" onclick="closeMobileNav()">FAQ</a>
+    <a href="#contact" onclick="closeMobileNav()">Contact</a>
+</div>
+
+<!-- Navbar -->
+<nav id="navbar">
+    <div class="nav-logo">AI.ConnectionsInc</div>
+    <ul class="nav-links">
+        <li><a href="#vision-mission">Vision</a></li>
+        <li><a href="#services">Services</a></li>
+        <li><a href="#about">About</a></li>
+        <li><a href="#testimonials">Clients</a></li>
+        <li><a href="#faq">FAQ</a></li>
+        <li><a href="#contact" class="nav-cta">Get Started</a></li>
+    </ul>
+    <div class="hamburger" onclick="openMobileNav()">
+        <span></span><span></span><span></span>
+    </div>
+</nav>
+
+<!-- ─── HERO ─── -->
+<section id="hero">
+    <div class="hero-content">
+        <div class="hero-badge">
+            <div class="dot"></div>
+            Proudly Serving Canadian Businesses Coast to Coast
+        </div>
+        <h1 class="hero-title">
+            <span id="typewriter"></span><span class="tw-cursor"></span>
+        </h1>
+        <p class="hero-subtitle">
+            Fast, affordable AI-powered solutions built specifically for small and medium-sized Canadian businesses.
+            Stop falling behind — start growing with AI today.
+        </p>
+        <div class="hero-warning">
+            <i class="fa-solid fa-triangle-exclamation"></i>
+            While you wait, your competitors are already growing with AI.
+        </div>
+        <div class="hero-buttons">
+            <a href="#contact" class="btn-primary">Start Your AI Journey</a>
+            <a href="#services" class="btn-secondary">Explore Services</a>
+        </div>
+        <div class="hero-stats">
+            <div class="stat">
+                <div class="stat-number" data-target="500" data-suffix="+">0+</div>
+                <div class="stat-label">Businesses Empowered</div>
+            </div>
+            <div class="stat">
+                <div class="stat-number" data-target="95" data-suffix="%">0%</div>
+                <div class="stat-label">Client Satisfaction Rate</div>
+            </div>
+            <div class="stat">
+                <div class="stat-number" data-target="14" data-suffix=" Days">0 Days</div>
+                <div class="stat-label">Average Delivery Time</div>
+            </div>
+            <div class="stat">
+                <div class="stat-number" data-target="60" data-suffix="% Less">0% Less</div>
+                <div class="stat-label">Cost vs Enterprise AI Firms</div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ─── VISION & MISSION ─── -->
+<section id="vision-mission">
+    <div class="container">
+        <div class="text-center reveal">
+            <div class="section-tag">Our Purpose</div>
+            <h2 class="section-title">Vision &amp; <span class="gradient-text">Mission</span></h2>
+            <p class="section-subtitle">We exist to close the gap between enterprise AI capabilities and everyday Canadian businesses.</p>
+        </div>
+        <div class="vm-grid">
+            <div class="glass-card vm-card reveal rd1">
+                <div class="vm-icon">🔭</div>
+                <h3>Our <span class="gradient-text">Vision</span></h3>
+                <p>To be Canada's most trusted catalyst for AI adoption — a future where every small and medium-sized business, from Halifax to Victoria, has access to the transformative power of artificial intelligence. We envision a Canada where geography, budget, and technical complexity are no longer barriers to competing in the AI era. A level playing field, powered by innovation and built right here at home.</p>
+            </div>
+            <div class="glass-card vm-card reveal rd2">
+                <div class="vm-icon">🎯</div>
+                <h3>Our <span class="gradient-text">Mission</span></h3>
+                <p>To deliver fast, affordable, and practical AI-powered solutions that empower Canadian SMBs to compete, grow, and thrive in the digital economy. We build solutions that work — not just demos. We move quickly so your business doesn't wait. We price fairly so AI is accessible, not just aspirational. And we stay by your side as your business evolves and the technology grows with you.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<div class="section-divider"></div>
+
+<!-- ─── URGENCY ─── -->
+<section id="urgency">
+    <div class="container">
+        <div class="urgency-banner reveal">
+            <h2 class="urgency-title">The <span style="color:#ffa500;">Clock Is Ticking.</span><br>Are You Being Left Behind?</h2>
+            <p class="urgency-text">
+                Every day without AI is a day your competitors gain ground. Businesses embracing AI are growing faster, serving customers better, and cutting costs dramatically. The question isn't <em>if</em> you should adopt AI — it's whether you can afford to wait any longer. We're here to make sure you don't have to.
+            </p>
+            <div class="urgency-stats">
+                <div class="urgency-stat">
+                    <div class="urgency-stat-num">72%</div>
+                    <div class="urgency-stat-label">of businesses plan to adopt AI<br>in the next 12 months</div>
+                </div>
+                <div class="urgency-stat">
+                    <div class="urgency-stat-num">3×</div>
+                    <div class="urgency-stat-label">faster growth for AI-adopting<br>SMBs vs non-adopters</div>
+                </div>
+                <div class="urgency-stat">
+                    <div class="urgency-stat-num">40%</div>
+                    <div class="urgency-stat-label">average operational cost reduction<br>through AI automation</div>
+                </div>
+                <div class="urgency-stat">
+                    <div class="urgency-stat-num">Now</div>
+                    <div class="urgency-stat-label">The best time to start<br>was yesterday. This is second best.</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<div class="section-divider"></div>
+
+<!-- ─── SERVICES ─── -->
+<section id="services">
+    <div class="container">
+        <div class="text-center reveal">
+            <div class="section-tag">What We Build</div>
+            <h2 class="section-title">AI Solutions That <span class="gradient-text">Actually Work</span></h2>
+            <p class="section-subtitle">Practical, deployable AI tools built for how real Canadian businesses operate — not how enterprise textbooks say they should.</p>
+        </div>
+        <div class="services-grid">
+            <div class="glass-card service-card reveal rd1">
+                <div class="service-icon"><i class="fa-solid fa-robot"></i></div>
+                <h3>Intelligent Business Automation</h3>
+                <p>Eliminate repetitive, time-consuming tasks with AI agents that work 24/7. From invoice processing and data entry to scheduling and reporting — we automate what's slowing you down so your team focuses on what matters.</p>
+                <span class="service-tag">Most Popular</span>
+            </div>
+            <div class="glass-card service-card reveal rd2">
+                <div class="service-icon"><i class="fa-solid fa-comments"></i></div>
+                <h3>AI Customer Experience</h3>
+                <p>Deploy intelligent chatbots and virtual assistants that handle customer inquiries, bookings, and support around the clock. Give your customers enterprise-grade service on a small-business budget.</p>
+                <span class="service-tag">High ROI</span>
+            </div>
+            <div class="glass-card service-card reveal rd3">
+                <div class="service-icon"><i class="fa-solid fa-chart-line"></i></div>
+                <h3>Data Analytics &amp; AI Insights</h3>
+                <p>Turn your raw business data into actionable intelligence. Our AI dashboards surface trends, predict customer behaviour, and highlight opportunities you'd otherwise miss — all without a data science team.</p>
+                <span class="service-tag">Fast Results</span>
+            </div>
+            <div class="glass-card service-card reveal rd1">
+                <div class="service-icon"><i class="fa-solid fa-bullhorn"></i></div>
+                <h3>AI-Powered Marketing</h3>
+                <p>Create personalized marketing campaigns at scale. AI-driven content generation, audience segmentation, email automation, and ad optimization that drives real revenue — not just clicks.</p>
+                <span class="service-tag">Growth Driver</span>
+            </div>
+            <div class="glass-card service-card reveal rd2">
+                <div class="service-icon"><i class="fa-solid fa-code"></i></div>
+                <h3>Custom AI Development</h3>
+                <p>Need something unique? We design and build bespoke AI systems tailored to your exact industry and workflow — from predictive inventory management to document processing and beyond.</p>
+                <span class="service-tag">Built For You</span>
+            </div>
+            <div class="glass-card service-card reveal rd3">
+                <div class="service-icon"><i class="fa-solid fa-compass"></i></div>
+                <h3>AI Strategy &amp; Consulting</h3>
+                <p>Not sure where to start? Our experts assess your business, identify the highest-impact AI opportunities, and hand you a clear, actionable roadmap — with no enterprise price tag and no jargon.</p>
+                <span class="service-tag">Start Here</span>
+            </div>
+        </div>
+    </div>
+</section>
+
+<div class="section-divider"></div>
+
+<!-- ─── ABOUT ─── -->
+<section id="about">
+    <div class="container">
+        <div class="about-grid">
+            <div class="about-content reveal">
+                <div class="section-tag">About Us</div>
+                <h2>Built By Canadians,<br><span class="gradient-text">For Canadian Business</span></h2>
+                <p>AI.ConnectionsInc was founded on a simple belief: the AI revolution shouldn't be exclusive to Fortune 500 companies. We saw brilliant Canadian entrepreneurs — restaurant owners, retailers, service providers, and manufacturers — struggling to compete in a world where larger competitors were rapidly deploying AI to gain an edge.</p>
+                <p>So we built a company to fix that. One that moves fast, prices fairly, and speaks the language of real business problems — not Silicon Valley jargon. We're not here to sell you technology. We're here to grow your business.</p>
+                <ul class="about-features">
+                    <li><div class="check"><i class="fa-solid fa-check"></i></div><span>100% Canadian-owned and operated</span></li>
+                    <li><div class="check"><i class="fa-solid fa-check"></i></div><span>Solutions delivered in 2–6 weeks, not months</span></li>
+                    <li><div class="check"><i class="fa-solid fa-check"></i></div><span>Transparent pricing designed for SMB budgets</span></li>
+                    <li><div class="check"><i class="fa-solid fa-check"></i></div><span>Ongoing support &amp; continuous optimization included</span></li>
+                    <li><div class="check"><i class="fa-solid fa-check"></i></div><span>No lock-in contracts — results earn your loyalty</span></li>
+                    <li><div class="check"><i class="fa-solid fa-check"></i></div><span>PIPEDA-compliant, privacy-first by design</span></li>
+                </ul>
+            </div>
+            <div class="about-visual reveal rd2">
+                <div style="position:relative;">
+                    <div class="about-main-card">
+                        <div class="canada-badge">
+                            <div class="canada-flag">🍁</div>
+                            <div class="canada-badge-text">
+                                <strong>Proudly Canadian</strong>
+                                <span>Serving businesses coast to coast</span>
+                            </div>
+                        </div>
+                        <div class="values-grid">
+                            <div class="value-item"><div class="vi">⚡</div><span>Move Fast</span></div>
+                            <div class="value-item"><div class="vi">💰</div><span>Affordable</span></div>
+                            <div class="value-item"><div class="vi">🔒</div><span>Privacy First</span></div>
+                            <div class="value-item"><div class="vi">🤝</div><span>True Partners</span></div>
+                        </div>
+                    </div>
+                    <div class="float-badge float-badge-1"><div class="fdot"></div>AI Live in Under 14 Days</div>
+                    <div class="float-badge float-badge-2"><div class="fdot"></div>500+ Businesses Growing</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<div class="section-divider"></div>
+
+<!-- ─── TESTIMONIALS ─── -->
+<section id="testimonials">
+    <div class="container">
+        <div class="text-center reveal">
+            <div class="section-tag">Client Stories</div>
+            <h2 class="section-title">Canadian Businesses <span class="gradient-text">Winning with AI</span></h2>
+            <p class="section-subtitle">Real results from real businesses. No enterprise budgets, no dedicated tech teams — just the power of AI, delivered affordably.</p>
+        </div>
+        <div class="testimonials-grid">
+            <div class="glass-card testimonial-card reveal rd1">
+                <div class="stars">★★★★★</div>
+                <div class="quote-icon">"</div>
+                <p class="testimonial-text">We were skeptical AI was for a family-owned restaurant group. But AI.ConnectionsInc built us a customer service chatbot and automated our reservation system in just three weeks. Our staff saves 15 hours a week and customer satisfaction scores went up by 40%. We're true believers now.</p>
+                <div class="testimonial-author">
+                    <div class="author-avatar">MK</div>
+                    <div>
+                        <div class="author-name">Maria Kowalski</div>
+                        <div class="author-title">Owner, Harvest Table Restaurant Group</div>
+                        <div class="author-loc"><i class="fa-solid fa-location-dot"></i> Toronto, Ontario</div>
+                    </div>
+                </div>
+            </div>
+            <div class="glass-card testimonial-card reveal rd2">
+                <div class="stars">★★★★★</div>
+                <div class="quote-icon">"</div>
+                <p class="testimonial-text">Our e-commerce store was drowning in manual data work. AI.ConnectionsInc set up automated inventory forecasting and personalized email campaigns in under a month. Sales increased 28% in the first quarter and my team finally has time to focus on strategy, not spreadsheets.</p>
+                <div class="testimonial-author">
+                    <div class="author-avatar">JT</div>
+                    <div>
+                        <div class="author-name">James Tremblay</div>
+                        <div class="author-title">CEO, NorthShore Outdoors</div>
+                        <div class="author-loc"><i class="fa-solid fa-location-dot"></i> Vancouver, BC</div>
+                    </div>
+                </div>
+            </div>
+            <div class="glass-card testimonial-card reveal rd3">
+                <div class="stars">★★★★★</div>
+                <div class="quote-icon">"</div>
+                <p class="testimonial-text">As a small accounting firm I was worried AI would be too complex or expensive. Instead, they built a document processing tool that reads client files and pre-populates tax forms automatically. We've cut processing time in half and taken on 30% more clients without adding headcount.</p>
+                <div class="testimonial-author">
+                    <div class="author-avatar">PD</div>
+                    <div>
+                        <div class="author-name">Priya Desai, CPA</div>
+                        <div class="author-title">Founder, Meridian Accounting</div>
+                        <div class="author-loc"><i class="fa-solid fa-location-dot"></i> Calgary, Alberta</div>
+                    </div>
+                </div>
+            </div>
+            <div class="glass-card testimonial-card reveal rd1">
+                <div class="stars">★★★★★</div>
+                <div class="quote-icon">"</div>
+                <p class="testimonial-text">The AI analytics dashboard completely changed how I understand my retail business. I can now predict which products will sell before I order them. Dead stock dropped 35% and margins improved significantly. The ROI paid for itself within two months of going live.</p>
+                <div class="testimonial-author">
+                    <div class="author-avatar">AR</div>
+                    <div>
+                        <div class="author-name">Amir Rahimi</div>
+                        <div class="author-title">Owner, StyleHub Boutique</div>
+                        <div class="author-loc"><i class="fa-solid fa-location-dot"></i> Ottawa, Ontario</div>
+                    </div>
+                </div>
+            </div>
+            <div class="glass-card testimonial-card reveal rd2">
+                <div class="stars">★★★★★</div>
+                <div class="quote-icon">"</div>
+                <p class="testimonial-text">We run a small HVAC company and I never thought AI was for us. They built a scheduling AI that routes our technicians optimally and predicts maintenance needs for clients before problems happen. We now serve 25% more customers per week without hiring additional staff.</p>
+                <div class="testimonial-author">
+                    <div class="author-avatar">LC</div>
+                    <div>
+                        <div class="author-name">Luc Charette</div>
+                        <div class="author-title">President, Arctic Comfort HVAC</div>
+                        <div class="author-loc"><i class="fa-solid fa-location-dot"></i> Québec City, QC</div>
+                    </div>
+                </div>
+            </div>
+            <div class="glass-card testimonial-card reveal rd3">
+                <div class="stars">★★★★★</div>
+                <div class="quote-icon">"</div>
+                <p class="testimonial-text">From our first call I knew these folks understood real business. They didn't try to sell us something fancy — they listened to our problems and built a targeted solution that fit our budget. Delivered on time, works perfectly, and the support since launch has been outstanding.</p>
+                <div class="testimonial-author">
+                    <div class="author-avatar">SO</div>
+                    <div>
+                        <div class="author-name">Sarah O'Brien</div>
+                        <div class="author-title">Director, Coastal Care Clinics</div>
+                        <div class="author-loc"><i class="fa-solid fa-location-dot"></i> Halifax, Nova Scotia</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<div class="section-divider"></div>
+
+<!-- ─── FAQ ─── -->
+<section id="faq">
+    <div class="container">
+        <div class="text-center reveal">
+            <div class="section-tag">FAQ</div>
+            <h2 class="section-title">Questions? We've Got <span class="gradient-text">Answers.</span></h2>
+            <p class="section-subtitle">Everything you need to know about getting started with AI for your Canadian business.</p>
+        </div>
+        <div class="faq-list">
+            <div class="faq-item reveal rd1">
+                <div class="faq-question"><span>Do I need technical knowledge or an IT team to use your solutions?</span><div class="faq-icon"><i class="fa-solid fa-plus"></i></div></div>
+                <div class="faq-answer"><div class="faq-answer-inner">Absolutely not. We design every solution specifically for business owners and their staff — not developers. Our tools come with intuitive interfaces, plain-language dashboards, and full onboarding training for your team. We handle all the technical complexity behind the scenes so you can focus on running your business. If you can use a smartphone, you can use our AI tools.</div></div>
+            </div>
+            <div class="faq-item reveal rd2">
+                <div class="faq-question"><span>How much does an AI solution typically cost for a small business?</span><div class="faq-icon"><i class="fa-solid fa-plus"></i></div></div>
+                <div class="faq-answer"><div class="faq-answer-inner">Our solutions are priced to be accessible. Depending on complexity, projects typically range from a few thousand to tens of thousands of dollars — a fraction of what enterprise AI firms charge for comparable results. We offer flexible payment options and phased implementations to fit SMB cash flow. Book a free consultation and we'll give you a transparent, itemized estimate with zero surprises.</div></div>
+            </div>
+            <div class="faq-item reveal rd3">
+                <div class="faq-question"><span>How quickly can I have an AI solution up and running?</span><div class="faq-icon"><i class="fa-solid fa-plus"></i></div></div>
+                <div class="faq-answer"><div class="faq-answer-inner">Speed is one of our biggest differentiators. Most of our solutions go live within 2 to 6 weeks from the initial consultation — not months. We use proven frameworks, pre-built components, and an agile delivery process to get you results fast. In most cases you'll see a working prototype within the first week of the build phase.</div></div>
+            </div>
+            <div class="faq-item reveal rd1">
+                <div class="faq-question"><span>Is my business data safe and private?</span><div class="faq-icon"><i class="fa-solid fa-plus"></i></div></div>
+                <div class="faq-answer"><div class="faq-answer-inner">Data privacy is non-negotiable for us. All solutions we build are fully compliant with Canada's PIPEDA regulations and applicable provincial privacy laws. Your data stays yours — we never sell, share, or use your business data to train models. We also offer deployments in Canadian data centres to satisfy data residency requirements where needed.</div></div>
+            </div>
+            <div class="faq-item reveal rd2">
+                <div class="faq-question"><span>What if the AI solution doesn't deliver results for my business?</span><div class="faq-icon"><i class="fa-solid fa-plus"></i></div></div>
+                <div class="faq-answer"><div class="faq-answer-inner">We stand behind our work with a results guarantee. Before any project begins, we define clear, measurable success metrics together. If the solution isn't hitting agreed benchmarks within the first 90 days post-launch, we iterate and optimize at no additional cost until it does. We don't disappear after delivery — your success is our reputation and our business.</div></div>
+            </div>
+            <div class="faq-item reveal rd3">
+                <div class="faq-question"><span>Do you provide ongoing support after the solution launches?</span><div class="faq-icon"><i class="fa-solid fa-plus"></i></div></div>
+                <div class="faq-answer"><div class="faq-answer-inner">Yes — and this is a core part of how we work. We offer monthly support and optimization retainers that keep your AI solution performing at its best as your business evolves. AI systems improve with more data over time, and we actively monitor and tune your solution so it keeps getting better, not just sitting still after go-live.</div></div>
+            </div>
+            <div class="faq-item reveal rd1">
+                <div class="faq-question"><span>My business is in a niche industry — can you still help?</span><div class="faq-icon"><i class="fa-solid fa-plus"></i></div></div>
+                <div class="faq-answer"><div class="faq-answer-inner">Absolutely — niche industries are often where AI creates the most dramatic advantages. We've worked across hospitality, retail, healthcare, professional services, manufacturing, real estate, logistics, and more. Our discovery process is designed to deeply understand your specific workflows and competitive dynamics before we build a single line of code. The more specific your industry, the more targeted we can make your solution.</div></div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<div class="section-divider"></div>
+
+<!-- ─── CONTACT ─── -->
+<section id="contact">
+    <div class="container">
+        <div class="contact-grid">
+            <div class="contact-info reveal">
+                <div class="section-tag">Connect With Us</div>
+                <h2>Let's Build Your <span class="gradient-text">AI Future</span> Together</h2>
+                <p>Ready to stop watching competitors pull ahead? Let's talk. Book a free, no-pressure consultation and we'll show you exactly how AI can work for your specific business — with a clear plan and honest pricing.</p>
+                <div class="contact-items">
+                    <div class="contact-item">
+                        <div class="contact-icon"><i class="fa-solid fa-envelope"></i></div>
+                        <div class="contact-item-text"><strong>Email Us</strong><span>hello@aiconnectionsinc.ca</span></div>
+                    </div>
+                    <div class="contact-item">
+                        <div class="contact-icon"><i class="fa-solid fa-phone"></i></div>
+                        <div class="contact-item-text"><strong>Call Us</strong><span>+1 (800) AI-CONNECT</span></div>
+                    </div>
+                    <div class="contact-item">
+                        <div class="contact-icon"><i class="fa-solid fa-location-dot"></i></div>
+                        <div class="contact-item-text"><strong>Based In</strong><span>Toronto, Ontario — Serving All of Canada</span></div>
+                    </div>
+                    <div class="contact-item">
+                        <div class="contact-icon"><i class="fa-solid fa-clock"></i></div>
+                        <div class="contact-item-text"><strong>Response Time</strong><span>Within 24 hours, guaranteed</span></div>
+                    </div>
+                </div>
+            </div>
+            <div class="contact-form reveal rd2">
+                <h3 style="margin-bottom:30px;font-size:1.25rem;font-weight:800;">Book a Free Consultation</h3>
+                <div class="form-row">
+                    <div class="form-group"><label>First Name</label><input type="text" placeholder="John"></div>
+                    <div class="form-group"><label>Last Name</label><input type="text" placeholder="Smith"></div>
+                </div>
+                <div class="form-group"><label>Business Email</label><input type="email" placeholder="john@yourbusiness.ca"></div>
+                <div class="form-group"><label>Business Name</label><input type="text" placeholder="Your Business Inc."></div>
+                <div class="form-group">
+                    <label>Province</label>
+                    <select>
+                        <option value="">Select your province...</option>
+                        <option>Ontario</option><option>British Columbia</option><option>Alberta</option>
+                        <option>Quebec</option><option>Nova Scotia</option><option>Manitoba</option>
+                        <option>Saskatchewan</option><option>New Brunswick</option>
+                        <option>Newfoundland &amp; Labrador</option><option>Prince Edward Island</option>
+                        <option>Northwest Territories</option><option>Yukon</option><option>Nunavut</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>What Can We Help You With?</label>
+                    <select>
+                        <option value="">Select a service area...</option>
+                        <option>Business Automation</option><option>AI Customer Experience</option>
+                        <option>Data Analytics &amp; Insights</option><option>AI-Powered Marketing</option>
+                        <option>Custom AI Development</option><option>AI Strategy &amp; Consulting</option>
+                        <option>Not Sure Yet — Need Guidance</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Tell Us About Your Business</label>
+                    <textarea placeholder="Describe your business and the challenges you're hoping AI can help solve..."></textarea>
+                </div>
+                <button type="submit" class="btn-submit" id="submitBtn">
+                    Book My Free Consultation &nbsp;<i class="fa-solid fa-arrow-right"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ─── FOOTER ─── -->
+<footer>
+    <div class="footer-grid">
+        <div class="footer-brand">
+            <div class="footer-logo">AI.ConnectionsInc</div>
+            <p>Empowering Canadian small and medium-sized businesses to compete, grow, and thrive in the AI era. Fast delivery. Affordable pricing. Real results. 🍁</p>
+        </div>
+        <div class="footer-col">
+            <h4>Services</h4>
+            <ul class="footer-links">
+                <li><a href="#services">Business Automation</a></li>
+                <li><a href="#services">AI Customer Experience</a></li>
+                <li><a href="#services">Data Analytics</a></li>
+                <li><a href="#services">AI Marketing</a></li>
+                <li><a href="#services">Custom AI Dev</a></li>
+                <li><a href="#services">AI Consulting</a></li>
+            </ul>
+        </div>
+        <div class="footer-col">
+            <h4>Company</h4>
+            <ul class="footer-links">
+                <li><a href="#about">About Us</a></li>
+                <li><a href="#vision-mission">Vision &amp; Mission</a></li>
+                <li><a href="#testimonials">Client Stories</a></li>
+                <li><a href="#faq">FAQ</a></li>
+                <li><a href="#contact">Contact</a></li>
+            </ul>
+        </div>
+        <div class="footer-col">
+            <h4>Legal</h4>
+            <ul class="footer-links">
+                <li><a href="#">Privacy Policy</a></li>
+                <li><a href="#">Terms of Service</a></li>
+                <li><a href="#">PIPEDA Compliance</a></li>
+                <li><a href="#">Cookie Policy</a></li>
+            </ul>
+        </div>
+    </div>
+    <div class="footer-bottom">
+        <p>© 2025 AI.ConnectionsInc. All rights reserved. Proudly Canadian 🍁</p>
+        <div class="footer-socials">
+            <a href="#" class="social-link"><i class="fa-brands fa-linkedin-in"></i></a>
+            <a href="#" class="social-link"><i class="fa-brands fa-x-twitter"></i></a>
+            <a href="#" class="social-link"><i class="fa-brands fa-instagram"></i></a>
+            <a href="#" class="social-link"><i class="fa-brands fa-facebook-f"></i></a>
+        </div>
+    </div>
+</footer>
+
+<script>
+// ── Particles ──
+const canvas = document.getElementById('particles-canvas');
+const ctx = canvas.getContext('2d');
+
+function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+resize();
+window.addEventListener('resize', resize);
+
+const pts = Array.from({length: 80}, () => ({
+    x: Math.random() * canvas.width, y: Math.random() * canvas.height,
+    vx: (Math.random() - 0.5) * 0.28, vy: (Math.random() - 0.5) * 0.28,
+    r: Math.random() * 1.8 + 0.4,
+    op: Math.random() * 0.45 + 0.1,
+    col: Math.random() > 0.5 ? '0,245,255' : '0,102,255'
+}));
+
+function drawParticles() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    pts.forEach((p, i) => {
+        p.x += p.vx; p.y += p.vy;
+        if (p.x < 0 || p.x > canvas.width) p.vx *= -1;
+        if (p.y < 0 || p.y > canvas.height) p.vy *= -1;
+        ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(${p.col},${p.op})`; ctx.fill();
+        for (let j = i + 1; j < pts.length; j++) {
+            const dx = pts[j].x - p.x, dy = pts[j].y - p.y;
+            const d = Math.sqrt(dx*dx + dy*dy);
+            if (d < 130) {
+                ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(pts[j].x, pts[j].y);
+                ctx.strokeStyle = `rgba(0,102,255,${0.07*(1-d/130)})`; ctx.lineWidth = 0.5; ctx.stroke();
+            }
+        }
+    });
+    requestAnimationFrame(drawParticles);
+}
+drawParticles();
+
+// ── Navbar ──
+window.addEventListener('scroll', () => document.getElementById('navbar').classList.toggle('scrolled', window.scrollY > 50));
+
+// ── Mobile nav ──
+function openMobileNav() { document.getElementById('mobileNav').classList.add('open'); }
+function closeMobileNav() { document.getElementById('mobileNav').classList.remove('open'); }
+
+// ── Scroll reveal ──
+const revealObs = new IntersectionObserver(entries => {
+    entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+}, { threshold: 0.08 });
+document.querySelectorAll('.reveal').forEach(el => revealObs.observe(el));
+
+// ── Counter animation ──
+function animateCounter(el) {
+    const target = +el.dataset.target;
+    const suffix = el.dataset.suffix || '+';
+    const dur = 1800, start = performance.now();
+    (function tick(t) {
+        const p = Math.min((t - start) / dur, 1);
+        const ease = 1 - Math.pow(1 - p, 3);
+        el.textContent = Math.round(ease * target) + suffix;
+        if (p < 1) requestAnimationFrame(tick);
+    })(start);
+}
+const cntObs = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+        if (e.isIntersecting && !e.target.classList.contains('counted')) {
+            e.target.classList.add('counted');
+            animateCounter(e.target);
+        }
+    });
+}, { threshold: 0.5 });
+document.querySelectorAll('[data-target]').forEach(el => cntObs.observe(el));
+
+// ── Typewriter ──
+const phrases = [
+    'AI-Powered Growth\nfor Canadian Business.',
+    'Move Faster.\nGrow Smarter.',
+    'Affordable AI,\nReal Results.',
+    'Your Competitors\nAre Already Here.'
+];
+let pi = 0, ci = 0, del = false;
+const tw = document.getElementById('typewriter');
+
+function type() {
+    const cur = phrases[pi];
+    del ? ci-- : ci++;
+    tw.innerHTML = cur.substring(0, ci).replace('\n', '<br>');
+    let wait = del ? 38 : 75;
+    if (!del && ci === cur.length) { wait = 2600; del = true; }
+    else if (del && ci === 0) { del = false; pi = (pi + 1) % phrases.length; wait = 320; }
+    setTimeout(type, wait);
+}
+type();
+
+// ── FAQ ──
+document.querySelectorAll('.faq-item').forEach(item => {
+    item.querySelector('.faq-question').addEventListener('click', () => {
+        const active = item.classList.contains('active');
+        document.querySelectorAll('.faq-item').forEach(i => i.classList.remove('active'));
+        if (!active) item.classList.add('active');
+    });
+});
+
+// ── Form submit ──
+document.getElementById('submitBtn').addEventListener('click', e => {
+    e.preventDefault();
+    const btn = e.currentTarget;
+    btn.innerHTML = '<i class="fa-solid fa-check"></i> &nbsp;Sent! We\'ll be in touch within 24 hours.';
+    btn.style.background = 'linear-gradient(135deg,#4ade80,#16a34a)';
+    btn.disabled = true;
+    setTimeout(() => {
+        btn.innerHTML = 'Book My Free Consultation &nbsp;<i class="fa-solid fa-arrow-right"></i>';
+        btn.style.background = '';
+        btn.disabled = false;
+    }, 5000);
+});
+</script>
+</body>
+</html>

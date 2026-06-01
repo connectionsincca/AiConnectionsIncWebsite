@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI.ConnectionsInc — Aurora Glass</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@200;300;400;500;600;700;800;900&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{
+  --a1:#00ff9d;--a2:#00d4ff;--a3:#b060ff;--a4:#ff6090;
+  --bg:#010912;--glass:rgba(255,255,255,0.04);--gb:rgba(255,255,255,0.09);
+  --text:#eef2ff;--muted:rgba(238,242,255,0.5);
+}
+html{scroll-behavior:smooth;}
+body{font-family:'Outfit',sans-serif;background:var(--bg);color:var(--text);overflow-x:hidden;cursor:none;}
+::-webkit-scrollbar{width:5px;}::-webkit-scrollbar-track{background:var(--bg);}::-webkit-scrollbar-thumb{background:rgba(0,212,255,0.4);border-radius:3px;}
+
+/* Cursor */
+#cd{position:fixed;width:6px;height:6px;background:#fff;border-radius:50%;pointer-events:none;z-index:9999;transform:translate(-50%,-50%);}
+#cr{position:fixed;width:44px;height:44px;border:1px solid rgba(255,255,255,0.3);border-radius:50%;pointer-events:none;z-index:9998;transform:translate(-50%,-50%);transition:width .25s,height .25s,border-color .25s;}
+#cr.big{width:64px;height:64px;border-color:var(--a1);}
+
+/* Canvas */
+#bgc{position:fixed;top:0;left:0;width:100%;height:100%;z-index:0;pointer-events:none;}
+
+/* Nav */
+nav{position:fixed;top:0;left:0;right:0;z-index:100;padding:26px 48px;display:flex;align-items:center;justify-content:space-between;transition:all .4s;}
+nav.fr{background:rgba(1,9,18,0.75);backdrop-filter:blur(28px);border-bottom:1px solid rgba(255,255,255,0.06);padding:16px 48px;}
+.nlogo{font-size:1.1rem;font-weight:600;background:linear-gradient(135deg,var(--a1),var(--a2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.nlinks{display:flex;gap:36px;list-style:none;}
+.nlinks a{color:var(--muted);text-decoration:none;font-size:.85rem;font-weight:400;transition:color .3s;}
+.nlinks a:hover{color:var(--a1);}
+.ncta{background:rgba(0,255,157,0.1);border:1px solid rgba(0,255,157,0.25);color:var(--a1)!important;padding:9px 22px;border-radius:50px;font-weight:500!important;}
+.ncta:hover{background:rgba(0,255,157,0.18)!important;}
+
+/* Section base */
+section{position:relative;z-index:1;padding:110px 48px;}
+.container{max-width:1100px;margin:0 auto;}
+.depth{will-change:transform,filter,opacity;}
+
+/* Glass */
+.glass{
+  background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);
+  backdrop-filter:blur(32px) saturate(160%);-webkit-backdrop-filter:blur(32px) saturate(160%);
+  border-radius:20px;box-shadow:0 8px 48px rgba(0,0,0,0.4),inset 0 1px 0 rgba(255,255,255,0.08);
+  position:relative;overflow:hidden;
+}
+.glass::before{content:'';position:absolute;inset:0;border-radius:inherit;background:linear-gradient(135deg,rgba(255,255,255,0.07) 0%,transparent 50%,rgba(255,255,255,0.02) 100%);pointer-events:none;}
+
+/* Tilt effect */
+.glass-tilt{transition:transform .6s ease;}
+
+/* SVG visual containers */
+.svg-wrap{
+  position:relative;overflow:hidden;border-radius:16px;
+  background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.09);
+  backdrop-filter:blur(16px);
+}
+.svg-wrap::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(to right,transparent,rgba(255,255,255,0.2),transparent);z-index:1;}
+.svg-wrap object{width:100%;height:100%;display:block;border:none;}
+
+/* Section labels */
+.ey{font-family:'DM Mono',monospace;font-size:.7rem;color:var(--a1);letter-spacing:3px;text-transform:uppercase;opacity:.8;margin-bottom:10px;}
+.sh{font-size:clamp(2rem,4vw,3rem);font-weight:800;letter-spacing:-.5px;margin-bottom:12px;}
+.sp{color:var(--muted);font-weight:300;font-size:1rem;}
+
+/* ── HERO ── */
+#hero{
+  min-height:100vh;display:grid;
+  grid-template-columns:1fr;
+  gap:60px;align-items:center;
+  padding:140px 48px 80px;
+}
+.h-left{}
+.h-badge{
+  display:inline-flex;align-items:center;gap:8px;
+  background:rgba(0,255,157,0.07);border:1px solid rgba(0,255,157,0.2);
+  padding:8px 22px;border-radius:50px;font-size:.82rem;color:var(--a1);
+  margin-bottom:36px;
+}
+.h-dot{width:8px;height:8px;background:var(--a1);border-radius:50%;animation:pulse 2s infinite;}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.h-title{font-size:clamp(3rem,6.5vw,5.8rem);font-weight:900;line-height:1.0;letter-spacing:-2px;margin-bottom:26px;}
+.h-title .hl{display:block;background:linear-gradient(135deg,var(--a1),var(--a2),var(--a3));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.h-sub{font-size:clamp(1rem,1.8vw,1.2rem);color:var(--muted);font-weight:300;line-height:1.85;margin-bottom:18px;max-width:480px;}
+.h-warn{display:inline-flex;align-items:center;gap:10px;background:rgba(255,165,0,0.07);border:1px solid rgba(255,165,0,0.22);color:#ffb347;padding:11px 22px;border-radius:11px;font-size:.9rem;font-weight:500;margin-bottom:36px;}
+.h-btns{display:flex;gap:14px;flex-wrap:wrap;}
+.btn-glow{background:linear-gradient(135deg,var(--a1),var(--a2));color:#010912;padding:15px 40px;border-radius:50px;font-size:.95rem;font-weight:700;text-decoration:none;transition:transform .3s,box-shadow .3s;box-shadow:0 0 30px rgba(0,255,157,0.3);}
+.btn-glow:hover{transform:translateY(-3px);box-shadow:0 0 50px rgba(0,255,157,0.5);}
+.btn-ghost{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.12);color:var(--text);padding:15px 40px;border-radius:50px;font-size:.95rem;font-weight:500;text-decoration:none;transition:all .3s;backdrop-filter:blur(8px);}
+.btn-ghost:hover{border-color:rgba(255,255,255,0.25);background:rgba(255,255,255,0.08);}
+.scroll-hint{position:absolute;bottom:36px;left:50%;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:8px;color:var(--muted);font-size:.68rem;letter-spacing:2px;text-transform:uppercase;font-family:'DM Mono',monospace;opacity:.55;}
+.sl{width:1px;height:46px;background:linear-gradient(to bottom,rgba(255,255,255,0.4),transparent);animation:sp 2s ease-in-out infinite;}
+@keyframes sp{0%,100%{opacity:.4;transform:scaleY(1)}50%{opacity:1;transform:scaleY(1.15)}}
+
+/* ── STATS ROW ── */
+#stats-bar{min-height:auto;padding:0 48px 60px;}
+.srow{display:flex;gap:0;border-radius:20px;overflow:hidden;}
+.sc{flex:1;padding:36px;text-align:center;border-right:1px solid rgba(255,255,255,0.07);}
+.sc:last-child{border-right:none;}
+.scn{font-size:2.6rem;font-weight:900;letter-spacing:-1px;background:linear-gradient(135deg,var(--a1),var(--a2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.scl{font-size:.75rem;color:var(--muted);margin-top:6px;}
+
+/* ── VISION ── */
+#vision{}
+.grid-vm{display:grid;grid-template-columns:1fr 1fr;gap:28px;margin-top:48px;}
+.vm-card{padding:44px;}
+.vm-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--grd);}
+.vm-n{font-family:'DM Mono',monospace;font-size:.68rem;color:var(--a1);letter-spacing:3px;margin-bottom:18px;}
+.vm-card h3{font-size:1.5rem;font-weight:700;margin-bottom:14px;}
+.vm-card p{color:var(--muted);line-height:1.9;font-weight:300;font-size:.95rem;}
+.al1{--grd:linear-gradient(to right,var(--a1),var(--a2));}
+.al2{--grd:linear-gradient(to right,var(--a3),var(--a4));}
+
+/* ── SERVICES ── */
+#services{min-height:auto;}
+.intro{margin-bottom:48px;}
+.intro h2{font-size:clamp(2rem,4vw,3rem);font-weight:800;letter-spacing:-.5px;margin-bottom:10px;}
+.intro p{color:var(--muted);font-weight:300;font-size:1rem;max-width:520px;}
+.svc-row{display:flex;align-items:center;gap:32px;padding:30px 36px;border-bottom:1px solid rgba(255,255,255,0.05);position:relative;overflow:hidden;transition:background .3s;}
+.svc-row:first-child{border-top:1px solid rgba(255,255,255,0.05);}
+.svc-row::before{content:'';position:absolute;left:0;top:0;bottom:0;width:0;background:linear-gradient(to right,rgba(0,255,157,0.07),transparent);transition:width .5s ease;}
+.svc-row:hover::before{width:100%;}
+.svc-n{font-family:'DM Mono',monospace;font-size:.68rem;color:var(--a1);opacity:.5;width:28px;flex-shrink:0;}
+.svc-ic{width:42px;height:42px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.15rem;flex-shrink:0;transition:all .3s;}
+.svc-row:hover .svc-ic{background:rgba(0,255,157,0.1);border-color:rgba(0,255,157,0.2);}
+.svc-b{flex:1;}
+.svc-b h4{font-size:1.02rem;font-weight:600;margin-bottom:5px;letter-spacing:-.2px;}
+.svc-b p{font-size:.86rem;color:var(--muted);font-weight:300;line-height:1.6;}
+.svc-tag{font-size:.68rem;color:var(--a2);font-family:'DM Mono',monospace;letter-spacing:1px;opacity:.7;}
+
+/* ── ABOUT ── */
+#about{min-height:auto;}
+.about-layout{display:grid;grid-template-columns:1fr 1fr;gap:60px;align-items:start;}
+.at h2{font-size:clamp(1.8rem,3.5vw,2.8rem);font-weight:800;letter-spacing:-.5px;margin-bottom:16px;}
+.at p{color:var(--muted);font-weight:300;line-height:1.9;margin-bottom:13px;font-size:.95rem;}
+.pill-list{display:flex;flex-wrap:wrap;gap:10px;margin-top:24px;}
+.pill{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.09);padding:8px 18px;border-radius:50px;font-size:.78rem;color:var(--muted);}
+.ab-card{padding:40px;display:flex;flex-direction:column;gap:20px;}
+.ab-metric{display:flex;align-items:center;gap:16px;padding:16px;border-radius:12px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);}
+.ab-ic{width:36px;height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0;}
+.ab-ic.m1{background:rgba(0,255,157,0.1);}
+.ab-ic.m2{background:rgba(0,212,255,0.1);}
+.ab-ic.m3{background:rgba(176,96,255,0.1);}
+.ab-v{font-size:1.3rem;font-weight:700;margin-bottom:2px;}
+.ab-l{font-size:.74rem;color:var(--muted);}
+/* ── TESTIMONIALS ── */
+#testimonials{min-height:auto;}
+.tg{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;margin-top:48px;}
+.tc{padding:36px;position:relative;}
+.tc::after{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(to right,var(--a1),var(--a3));opacity:.45;}
+.tc-stars{color:var(--a1);font-size:.78rem;letter-spacing:3px;margin-bottom:14px;}
+.tc-text{font-size:.88rem;color:var(--muted);line-height:1.85;font-weight:300;margin-bottom:22px;font-style:italic;}
+.tc-auth{display:flex;align-items:center;gap:12px;}
+.tc-av{width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,var(--a1),var(--a3));display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.88rem;color:#010912;flex-shrink:0;}
+.tc-nm{font-weight:600;font-size:.86rem;}
+.tc-rl{font-size:.74rem;color:var(--muted);}
+.tc-loc{font-size:.7rem;color:var(--a2);margin-top:2px;opacity:.8;}
+
+/* ── CONTACT ── */
+#contact{min-height:auto;display:flex;flex-direction:column;align-items:center;text-align:center;}
+.ct-wrap{max-width:680px;width:100%;}
+.ct-wrap h2{font-size:clamp(2rem,4.5vw,3.8rem);font-weight:800;letter-spacing:-.5px;line-height:1.1;margin-bottom:16px;}
+.ct-wrap p{color:var(--muted);font-size:1rem;font-weight:300;margin-bottom:44px;line-height:1.8;}
+.ct-glass{padding:48px;}
+.fg{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;}
+.fl{display:flex;flex-direction:column;gap:7px;}
+.fl.full{grid-column:1/-1;}
+.fl label{font-size:.7rem;font-weight:500;color:var(--muted);letter-spacing:1.5px;text-transform:uppercase;font-family:'DM Mono',monospace;}
+.fl input,.fl select,.fl textarea{background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.09);border-radius:10px;padding:13px 16px;color:var(--text);font-family:'Outfit',sans-serif;font-size:.9rem;outline:none;transition:border-color .3s,box-shadow .3s;font-weight:300;}
+.fl input:focus,.fl select:focus,.fl textarea:focus{border-color:rgba(0,255,157,0.4);box-shadow:0 0 0 3px rgba(0,255,157,0.06);}
+.fl select option{background:#0a1628;}
+.fl textarea{height:100px;resize:vertical;}
+.sub-btn{width:100%;background:linear-gradient(135deg,var(--a1),var(--a2));color:#010912;border:none;padding:16px;border-radius:10px;font-size:.95rem;font-weight:700;cursor:pointer;font-family:'Outfit',sans-serif;margin-top:4px;transition:transform .3s,box-shadow .3s;}
+.sub-btn:hover{transform:translateY(-2px);box-shadow:0 12px 36px rgba(0,255,157,0.35);}
+
+/* Divider */
+.divider{height:1px;background:rgba(255,255,255,0.06);max-width:1100px;margin:0 auto;}
+
+/* Footer */
+footer{position:relative;z-index:1;padding:36px 48px;border-top:1px solid rgba(255,255,255,0.06);background:rgba(1,9,18,0.8);backdrop-filter:blur(20px);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px;}
+.flogo{font-size:1rem;font-weight:600;background:linear-gradient(135deg,var(--a1),var(--a2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+footer p{font-size:.75rem;color:var(--muted);}
+.flinks{display:flex;gap:22px;}
+.flinks a{color:var(--muted);text-decoration:none;font-size:.75rem;transition:color .3s;}
+.flinks a:hover{color:var(--a1);}
+
+/* Reveal */
+.depth{opacity:0;transform:translateY(36px) scale(0.97);transition:opacity .8s ease,transform .8s ease;}
+.depth.vis{opacity:1;transform:none;}
+
+@media(max-width:960px){
+  .nlinks{display:none;}
+  section{padding:80px 24px;}
+  #stats-bar{padding:0 24px 60px;}
+#hero{grid-template-columns:1fr;padding:120px 24px 80px;}
+  .grid-vm,.about-layout{grid-template-columns:1fr;}
+  .tg{grid-template-columns:1fr;}
+  .fg{grid-template-columns:1fr;}
+}
+</style>
+</head>
+<body>
+
+<div id="cd"></div>
+<div id="cr"></div>
+<canvas id="bgc"></canvas>
+
+<nav id="nav">
+  <div class="nlogo">AI.ConnectionsInc</div>
+  <ul class="nlinks">
+    <li><a href="#vision">Vision</a></li>
+    <li><a href="#services">Services</a></li>
+    <li><a href="#about">About</a></li>
+    <li><a href="#testimonials">Clients</a></li>
+    <li><a href="#contact" class="ncta">Connect</a></li>
+  </ul>
+</nav>
+
+<!-- ── HERO ── -->
+<section id="hero">
+  <div class="h-left depth">
+    <div class="h-badge"><div class="h-dot"></div>Proudly Serving Canadian Businesses</div>
+    <h1 class="h-title">
+      The Future<br>
+      <span class="hl">Is Already Here.</span>
+    </h1>
+    <p class="h-sub">Fast, affordable AI solutions for small and medium-sized Canadian businesses. While you deliberate, your competitors are already growing.</p>
+    <div class="h-warn">⚠ While you wait, other businesses are growing with AI.</div>
+    <div class="h-btns">
+      <a href="#contact" class="btn-glow">Start Today</a>
+      <a href="#services" class="btn-ghost">See What We Build</a>
+    </div>
+  </div>
+  <div class="scroll-hint"><div class="sl"></div><span>Scroll</span></div>
+</section>
+
+<!-- ── STATS ── -->
+<section id="stats-bar">
+  <div class="container depth">
+    <div class="glass srow" style="border-radius:20px;overflow:hidden;">
+      <div class="sc"><div class="scn">500+</div><div class="scl">Businesses Powered</div></div>
+      <div class="sc"><div class="scn">95%</div><div class="scl">Client Satisfaction</div></div>
+      <div class="sc"><div class="scn">14 Days</div><div class="scl">Avg Delivery</div></div>
+      <div class="sc"><div class="scn">60% Less</div><div class="scl">vs Enterprise Cost</div></div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ── VISION / MISSION ── -->
+<section id="vision">
+  <div class="container">
+    <div class="depth"><div class="ey">Our Purpose</div><div class="sh">Vision &amp; Mission</div></div>
+    <div class="grid-vm">
+      <div class="glass vm-card al1 depth" style="transition-delay:.1s;">
+        <div class="vm-n">01 / VISION</div>
+        <h3>A Canada Where Every Business Has AI</h3>
+        <p>To be Canada's most trusted catalyst for AI adoption — a future where every small and medium-sized business, from Halifax to Victoria, has access to the transformative power of artificial intelligence. A level playing field, built right here at home.</p>
+      </div>
+      <div class="glass vm-card al2 depth" style="transition-delay:.2s;">
+        <div class="vm-n">02 / MISSION</div>
+        <h3>Deliver Fast. Price Fairly. Stay With You.</h3>
+        <p>To deliver fast, affordable, and practical AI-powered solutions that empower Canadian SMBs to compete, grow, and thrive in the digital economy. We build solutions that work — not just demos. We move quickly so your business doesn't wait.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ── SERVICES ── -->
+<section id="services">
+  <div class="container depth">
+    <div class="intro">
+      <div class="ey">What We Build</div>
+      <h2>AI Solutions That Actually Work</h2>
+      <p>Practical, deployable tools built for how real Canadian businesses operate — not how enterprise textbooks say they should.</p>
+    </div>
+    <div class="glass" style="overflow:hidden;">
+      <div class="svc-row"><span class="svc-n">01</span><div class="svc-ic">🤖</div><div class="svc-b"><h4>Intelligent Business Automation</h4><p>Eliminate repetitive tasks. AI agents working 24/7 — invoicing, scheduling, data processing, reporting.</p></div><span class="svc-tag">POPULAR</span></div>
+      <div class="svc-row"><span class="svc-n">02</span><div class="svc-ic">💬</div><div class="svc-b"><h4>AI Customer Experience</h4><p>Intelligent chatbots and virtual assistants that handle inquiries and bookings around the clock.</p></div><span class="svc-tag">HIGH ROI</span></div>
+      <div class="svc-row"><span class="svc-n">03</span><div class="svc-ic">📊</div><div class="svc-b"><h4>Data Analytics &amp; AI Insights</h4><p>Turn raw business data into decisions. AI dashboards that surface trends and predict behaviour.</p></div><span class="svc-tag">FAST</span></div>
+      <div class="svc-row"><span class="svc-n">04</span><div class="svc-ic">📣</div><div class="svc-b"><h4>AI-Powered Marketing</h4><p>Personalized campaigns at scale. Content generation, segmentation, email automation and ad optimization.</p></div><span class="svc-tag">GROWTH</span></div>
+      <div class="svc-row"><span class="svc-n">05</span><div class="svc-ic">⚙️</div><div class="svc-b"><h4>Custom AI Development</h4><p>Bespoke AI systems tailored to your exact industry — from predictive inventory to quality control.</p></div><span class="svc-tag">CUSTOM</span></div>
+      <div class="svc-row"><span class="svc-n">06</span><div class="svc-ic">🧭</div><div class="svc-b"><h4>AI Strategy &amp; Consulting</h4><p>Experts assess your business, identify AI opportunities, build a clear actionable roadmap.</p></div><span class="svc-tag">START HERE</span></div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ── ABOUT ── -->
+<section id="about">
+  <div class="container">
+    <div class="about-layout">
+      <div class="at depth">
+        <div class="ey">About Us</div>
+        <h2>Built By Canadians,<br><span style="background:linear-gradient(135deg,var(--a1),var(--a2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">For Canadian Business</span></h2>
+        <p>AI.ConnectionsInc was founded on a simple belief: the AI revolution shouldn't be exclusive to Fortune 500 companies. We saw brilliant Canadian entrepreneurs struggling to compete while larger competitors rapidly deployed AI to gain an edge.</p>
+        <p>So we built a company to fix that. One that moves fast, prices fairly, and speaks the language of real business problems — not Silicon Valley jargon.</p>
+        <div class="pill-list">
+          <span class="pill">🍁 100% Canadian</span>
+          <span class="pill">⚡ 2–6 Week Delivery</span>
+          <span class="pill">🔒 PIPEDA Compliant</span>
+          <span class="pill">💰 SMB Pricing</span>
+          <span class="pill">🤝 No Lock-in</span>
+        </div>
+      </div>
+      <div class="glass ab-card depth" style="transition-delay:.15s;">
+        <div class="ab-metric"><div class="ab-ic m1">⚡</div><div><div class="ab-v">2–6 Weeks</div><div class="ab-l">Average time to live AI solution</div></div></div>
+        <div class="ab-metric"><div class="ab-ic m2">💰</div><div><div class="ab-v">60% Less</div><div class="ab-l">Cost vs enterprise AI firms</div></div></div>
+        <div class="ab-metric"><div class="ab-ic m3">🛡️</div><div><div class="ab-v">90-Day</div><div class="ab-l">Results guarantee — iterate until it works</div></div></div>
+        <div style="margin-top:8px;padding:18px;background:rgba(255,0,0,0.05);border:1px solid rgba(255,60,60,0.12);border-radius:12px;display:flex;align-items:center;gap:14px;">
+          <span style="font-size:2rem;">🍁</span>
+          <div><div style="font-weight:600;font-size:.9rem;">Proudly Canadian</div><div style="font-size:.75rem;color:var(--muted);">Serving businesses coast to coast</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ── TESTIMONIALS ── -->
+<section id="testimonials">
+  <div class="container">
+    <div class="depth"><div class="ey">Client Stories</div><div class="sh">Canadian Businesses Winning with AI</div><p class="sp">Real results. No enterprise budgets. No dedicated tech teams.</p></div>
+    <div class="tg">
+      <div class="glass tc depth" style="transition-delay:.1s;">
+        <div class="tc-stars">★★★★★</div>
+        <p class="tc-text">"Skeptical AI was for a family restaurant group. AI.ConnectionsInc built a chatbot and automated reservations in three weeks. Staff saves 15 hrs/week and satisfaction jumped 40%. Believers now."</p>
+        <div class="tc-auth"><div class="tc-av">MK</div><div><div class="tc-nm">Maria Kowalski</div><div class="tc-rl">Owner, Harvest Table Group</div><div class="tc-loc">📍 Toronto, ON</div></div></div>
+      </div>
+      <div class="glass tc depth" style="transition-delay:.2s;">
+        <div class="tc-stars">★★★★★</div>
+        <p class="tc-text">"Automated inventory forecasting and personalized emails in under a month. Sales up 28% in Q1 and my team finally has time for strategy, not spreadsheets. Completely transformative."</p>
+        <div class="tc-auth"><div class="tc-av">JT</div><div><div class="tc-nm">James Tremblay</div><div class="tc-rl">CEO, NorthShore Outdoors</div><div class="tc-loc">📍 Vancouver, BC</div></div></div>
+      </div>
+      <div class="glass tc depth" style="transition-delay:.3s;">
+        <div class="tc-stars">★★★★★</div>
+        <p class="tc-text">"Document processing tool reads client files and pre-populates tax forms automatically. Processing time cut in half. Took on 30% more clients without adding headcount. ROI in 8 weeks."</p>
+        <div class="tc-auth"><div class="tc-av">PD</div><div><div class="tc-nm">Priya Desai, CPA</div><div class="tc-rl">Founder, Meridian Accounting</div><div class="tc-loc">📍 Calgary, AB</div></div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ── CONTACT ── -->
+<section id="contact">
+  <div class="container ct-wrap depth">
+    <div class="ey">Connect With Us</div>
+    <h2 class="sh" style="font-size:clamp(2rem,4.5vw,3.5rem);">Let's Build Your<br><span style="background:linear-gradient(135deg,var(--a1),var(--a2),var(--a3));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">AI Future Together</span></h2>
+    <p class="sp" style="margin:0 auto 44px;">Book a free, no-pressure consultation. Clear plan. Honest pricing. Real timeline.</p>
+    <div class="glass ct-glass">
+      <div class="fg">
+        <div class="fl"><label>First Name</label><input type="text" placeholder="John"></div>
+        <div class="fl"><label>Last Name</label><input type="text" placeholder="Smith"></div>
+        <div class="fl full"><label>Business Email</label><input type="email" placeholder="john@yourbusiness.ca"></div>
+        <div class="fl full"><label>Business Name</label><input type="text" placeholder="Your Business Inc."></div>
+        <div class="fl full"><label>Province</label>
+          <select><option>Select your province...</option><option>Ontario</option><option>British Columbia</option><option>Alberta</option><option>Quebec</option><option>Nova Scotia</option><option>Manitoba</option><option>Saskatchewan</option><option>Other</option></select>
+        </div>
+        <div class="fl full"><label>How Can We Help?</label><textarea placeholder="Describe your business and the challenges you want AI to solve..."></textarea></div>
+      </div>
+      <button class="sub-btn" id="subBtn">Book My Free Consultation →</button>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="flogo">AI.ConnectionsInc</div>
+  <p>© 2025 AI.ConnectionsInc. All rights reserved. Proudly Canadian 🍁</p>
+  <div class="flinks"><a href="#">Privacy</a><a href="#">Terms</a><a href="#">LinkedIn</a></div>
+</footer>
+
+<script>
+// ── Cursor ──
+const cd = document.getElementById('cd'), cr = document.getElementById('cr');
+let mx = 0, my = 0, lx = 0, ly = 0;
+document.addEventListener('mousemove', e => { mx = e.clientX; my = e.clientY; });
+;(function loop() {
+  cd.style.left = mx+'px'; cd.style.top = my+'px';
+  lx += (mx-lx)*.12; ly += (my-ly)*.12;
+  cr.style.left = lx+'px'; cr.style.top = ly+'px';
+  requestAnimationFrame(loop);
+})();
+document.querySelectorAll('a,button,input,select,textarea,.svc-row').forEach(el => {
+  el.addEventListener('mouseenter', () => cr.classList.add('big'));
+  el.addEventListener('mouseleave', () => cr.classList.remove('big'));
+});
+
+// ── Aurora Canvas ──
+const canvas = document.getElementById('bgc');
+const ctx = canvas.getContext('2d');
+let W, H, stars = [];
+function resize() {
+  W = canvas.width = window.innerWidth; H = canvas.height = window.innerHeight;
+  stars = Array.from({length:180}, () => ({x:Math.random()*W, y:Math.random()*H, r:Math.random()*1.2+.2, op:Math.random()*.6+.1}));
+}
+resize(); window.addEventListener('resize', resize);
+
+const bands = [
+  {y:.28,amp:65,freq:.0022,ph:0,spd:.28,col:[0,255,157]},
+  {y:.42,amp:85,freq:.0031,ph:1.8,spd:.38,col:[0,210,255]},
+  {y:.22,amp:45,freq:.0018,ph:3.2,spd:.22,col:[176,96,255]},
+  {y:.52,amp:55,freq:.0027,ph:.9,spd:.32,col:[0,255,200]},
+  {y:.35,amp:35,freq:.0014,ph:2.4,spd:.18,col:[255,90,140]},
+];
+let amx = W/2, amy = H/2, tmx = W/2, tmy = H/2;
+document.addEventListener('mousemove', e => { tmx = e.clientX; tmy = e.clientY; });
+
+function drawAurora(t) {
+  amx += (tmx-amx)*.04; amy += (tmy-amy)*.04;
+  ctx.clearRect(0,0,W,H);
+  const bg = ctx.createLinearGradient(0,0,0,H);
+  bg.addColorStop(0,'#010912'); bg.addColorStop(1,'#010b1e');
+  ctx.fillStyle = bg; ctx.fillRect(0,0,W,H);
+  stars.forEach(s => { ctx.beginPath(); ctx.arc(s.x,s.y,s.r,0,Math.PI*2); ctx.fillStyle=`rgba(255,255,255,${s.op})`; ctx.fill(); });
+  bands.forEach(b => {
+    b.ph += b.spd*.001;
+    const pts = [];
+    for (let x=0; x<=W; x+=4) {
+      const inf = Math.exp(-Math.pow((x-amx)/(W*.38),2));
+      const y = H*b.y + ((amy/H)-.5)*55*inf + Math.sin(x*b.freq+b.ph)*b.amp + Math.sin(x*b.freq*2.4+b.ph*1.6)*b.amp*.28;
+      pts.push({x,y});
+    }
+    ctx.beginPath(); pts.forEach((p,i) => i===0?ctx.moveTo(p.x,p.y):ctx.lineTo(p.x,p.y));
+    ctx.strokeStyle=`rgba(${b.col.join(',')},0.85)`; ctx.lineWidth=1.5; ctx.shadowBlur=28; ctx.shadowColor=`rgb(${b.col.join(',')})`; ctx.stroke(); ctx.shadowBlur=0;
+    const grd = ctx.createLinearGradient(0,H*b.y-b.amp-60,0,H*b.y+b.amp+120);
+    grd.addColorStop(0,`rgba(${b.col.join(',')},0)`); grd.addColorStop(.35,`rgba(${b.col.join(',')},0.11)`); grd.addColorStop(1,`rgba(${b.col.join(',')},0)`);
+    ctx.beginPath(); pts.forEach((p,i) => i===0?ctx.moveTo(p.x,p.y):ctx.lineTo(p.x,p.y));
+    ctx.lineTo(W,H); ctx.lineTo(0,H); ctx.closePath(); ctx.fillStyle=grd; ctx.fill();
+  });
+}
+
+// ── Scroll depth ──
+function updateDepth() {
+  const vh = window.innerHeight;
+  document.querySelectorAll('.depth').forEach(el => {
+    if (!el.classList.contains('vis')) {
+      const r = el.getBoundingClientRect();
+      if (r.top < vh*.88) el.classList.add('vis');
+    }
+  });
+}
+window.addEventListener('scroll', updateDepth, {passive:true});
+updateDepth();
+
+// ── Glass tilt ──
+document.querySelectorAll('.glass').forEach(el => {
+  el.addEventListener('mousemove', e => {
+    const r = el.getBoundingClientRect();
+    const dx = (e.clientX-r.left-r.width/2)/(r.width/2), dy = (e.clientY-r.top-r.height/2)/(r.height/2);
+    el.style.transform = `perspective(1000px) rotateY(${dx*4}deg) rotateX(${-dy*4}deg)`;
+    el.style.transition = 'transform .08s';
+  });
+  el.addEventListener('mouseleave', () => { el.style.transform=''; el.style.transition='transform .6s ease'; });
+});
+
+// ── Nav ──
+window.addEventListener('scroll', () => document.getElementById('nav').classList.toggle('fr', window.scrollY>60));
+
+// ── Render ──
+let t0 = null;
+(function frame(ts) { if (!t0) t0=ts; drawAurora(ts-t0); requestAnimationFrame(frame); })(performance.now());
+
+// ── Form ──
+document.getElementById('subBtn').addEventListener('click', e => {
+  e.preventDefault(); const b = e.currentTarget;
+  b.textContent = '✓ Sent! We\'ll be in touch within 24 hours.';
+  b.style.background = 'linear-gradient(135deg,#4ade80,#16a34a)';
+  setTimeout(() => { b.textContent='Book My Free Consultation →'; b.style.background=''; }, 5000);
+});
+</script>
+</body>
+</html>

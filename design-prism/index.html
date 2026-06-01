@@ -1,0 +1,894 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI.ConnectionsInc — Crystal Prism</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=DM+Mono:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{
+  --deep:#03010a;
+  --p1:#ff6b6b;--p2:#ffd93d;--p3:#6bcb77;--p4:#4d96ff;--p5:#c77dff;
+  --w:rgba(255,255,255,0.96);--m:rgba(255,255,255,0.72);--d:rgba(255,255,255,0.22);
+  --gb:rgba(255,255,255,0.10);
+}
+html{scroll-behavior:smooth;overflow-x:hidden;}
+body{font-family:'Space Grotesk',sans-serif;background:var(--deep);color:var(--w);overflow-x:hidden;cursor:none;}
+
+/* ── Cursor ── */
+.c-dot{position:fixed;width:4px;height:4px;border-radius:50%;background:#fff;pointer-events:none;z-index:9999;transform:translate(-50%,-50%);}
+.c-cross{
+  position:fixed;width:22px;height:22px;pointer-events:none;z-index:9998;
+  transform:translate(-50%,-50%);
+}
+.c-cross::before,.c-cross::after{content:'';position:absolute;background:rgba(255,255,255,0.6);}
+.c-cross::before{width:1px;height:100%;left:50%;transform:translateX(-50%);}
+.c-cross::after{width:100%;height:1px;top:50%;transform:translateY(-50%);}
+.c-ring{
+  position:fixed;width:32px;height:32px;border:1px solid rgba(255,255,255,0.25);
+  border-radius:50%;pointer-events:none;z-index:9997;transform:translate(-50%,-50%);
+  transition:width .25s,height .25s,border-color .25s;
+}
+.c-ring.big{width:52px;height:52px;border-color:rgba(77,150,255,0.55);}
+
+/* ── Canvas ── */
+#bg{position:fixed;top:0;left:0;width:100%;height:100%;z-index:0;pointer-events:none;}
+
+/* ── Vignette ── */
+body::after{
+  content:'';position:fixed;inset:0;z-index:1;pointer-events:none;
+  background:radial-gradient(ellipse 80% 80% at 50% 50%,transparent 40%,rgba(3,1,10,.65) 100%);
+}
+
+/* ── Nav ── */
+nav{
+  position:fixed;top:0;left:0;right:0;z-index:100;
+  display:flex;align-items:stretch;border-bottom:1px solid var(--gb);
+  transition:background .4s,backdrop-filter .4s;
+}
+nav.fr{background:rgba(3,1,10,0.88);backdrop-filter:blur(28px);}
+.nl{padding:20px 36px;border-right:1px solid var(--gb);display:flex;align-items:center;}
+.logo{font-size:.95rem;font-weight:700;letter-spacing:-.2px;}
+.logo em{font-style:normal;color:var(--p4);}
+.nc{flex:1;display:flex;align-items:center;justify-content:center;gap:40px;list-style:none;}
+.nc a{color:var(--m);text-decoration:none;font-size:.84rem;font-weight:500;letter-spacing:1.2px;text-transform:uppercase;transition:color .3s;}
+.nc a:hover{color:var(--w);}
+.nr{padding:20px 36px;border-left:1px solid var(--gb);display:flex;align-items:center;}
+.ncta{
+  font-size:.82rem;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;
+  color:var(--w);text-decoration:none;padding:9px 22px;
+  border:1px solid var(--gb);transition:all .3s;white-space:nowrap;
+}
+.ncta:hover{background:rgba(255,255,255,0.06);border-color:rgba(255,255,255,0.22);}
+
+/* ── Sections ── */
+section{position:relative;z-index:2;padding:130px 60px;}
+.container{max-width:1120px;margin:0 auto;}
+
+/* Depth driver — initial invisible state for below-fold elements */
+.depth{will-change:transform,opacity,filter;}
+
+/* ── Crystal glass — sharp, no radius ── */
+.crystal{
+  background:rgba(255,255,255,0.03);
+  border:1px solid rgba(255,255,255,0.09);
+  backdrop-filter:blur(36px) saturate(160%) brightness(1.08);
+  -webkit-backdrop-filter:blur(36px) saturate(160%) brightness(1.08);
+  position:relative;overflow:hidden;
+}
+.crystal::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:1px;
+  background:linear-gradient(to right,transparent,rgba(255,255,255,0.22),rgba(255,255,255,0.06),transparent);
+}
+.crystal::after{
+  content:'';position:absolute;top:0;left:0;bottom:0;width:1px;
+  background:linear-gradient(to bottom,rgba(255,255,255,0.18),transparent 65%);
+}
+
+/* Prismatic edge bars */
+.pbar{height:2px;background:linear-gradient(to right,var(--p4),var(--p5),var(--p1),var(--p2),var(--p3));}
+.pbarv{
+  position:absolute;left:0;top:0;bottom:0;width:2px;
+  background:linear-gradient(to bottom,var(--p4),var(--p5),var(--p1));opacity:.45;
+}
+
+/* ── HERO ── */
+#hero{
+  min-height:100vh;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;text-align:center;padding:0 60px;
+}
+.h-coord{
+  font-family:'DM Mono',monospace;font-size:.75rem;color:var(--m);
+  letter-spacing:3px;margin-bottom:52px;opacity:.85;
+  display:flex;align-items:center;gap:18px;
+}
+.h-coord::before,.h-coord::after{content:'';width:56px;height:1px;background:var(--gb);}
+.h-title{
+  font-size:clamp(3.8rem,10vw,9rem);font-weight:700;
+  letter-spacing:-4px;line-height:.9;margin-bottom:36px;
+}
+.h-title .l1{display:block;color:var(--w);}
+.h-title .l2{
+  display:block;
+  background:linear-gradient(135deg,var(--p4) 0%,var(--p5) 50%,var(--p1) 100%);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  filter:drop-shadow(0 0 40px rgba(77,150,255,0.5));
+}
+.h-title .l3{display:block;color:var(--m);font-weight:300;letter-spacing:-2px;}
+.h-tagline{
+  font-size:clamp(2rem,4.2vw,3.4rem);font-weight:400;
+  color:#d3adef;letter-spacing:0px;margin-bottom:28px;
+}
+.h-sub{
+  font-size:clamp(1rem,1.8vw,1.15rem);color:var(--m);
+  max-width:500px;line-height:1.85;font-weight:300;margin-bottom:24px;
+}
+.h-warning{
+  display:inline-flex;align-items:center;gap:10px;
+  border:1px solid rgba(255,165,0,0.35);
+  color:#ffb84d;padding:11px 24px;
+  font-size:.82rem;font-weight:500;margin-bottom:48px;
+  background:rgba(255,140,0,0.06);
+}
+.h-btns{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;}
+.btn-p{
+  padding:16px 46px;font-size:.8rem;font-weight:700;letter-spacing:1.5px;
+  text-transform:uppercase;text-decoration:none;color:var(--deep);
+  background:linear-gradient(135deg,var(--p4),var(--p5));
+  transition:transform .3s,box-shadow .3s;
+  box-shadow:0 0 36px rgba(77,150,255,0.22);
+}
+.btn-p:hover{transform:translateY(-3px) scale(1.02);box-shadow:0 0 56px rgba(77,150,255,0.4);}
+.btn-g{
+  padding:16px 46px;font-size:.8rem;font-weight:700;letter-spacing:1.5px;
+  text-transform:uppercase;text-decoration:none;color:var(--m);
+  border:1px solid var(--gb);transition:all .3s;
+}
+.btn-g:hover{border-color:rgba(255,255,255,0.22);color:var(--w);}
+.h-hint{
+  margin-top:80px;display:flex;flex-direction:column;align-items:center;gap:12px;
+  color:var(--m);font-family:'DM Mono',monospace;font-size:.75rem;letter-spacing:2px;
+  text-transform:uppercase;opacity:.8;
+}
+.h-arrow{animation:bob 2.4s ease-in-out infinite;}
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(9px)}}
+
+/* ── URGENCY ── */
+#urgency{min-height:auto;}
+.urgency-wrap{padding:72px 64px;text-align:center;position:relative;overflow:hidden;}
+.urgency-wrap::before{
+  content:'';position:absolute;top:-50%;left:-50%;width:200%;height:200%;
+  background:radial-gradient(circle,rgba(255,150,0,0.04) 0%,transparent 55%);
+  animation:spin 24s linear infinite;
+}
+@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+.urgency-wrap .ey{color:#ffb84d;opacity:1;}
+/* ── Ticking Clock ── */
+.clock{width:48px;height:48px;flex-shrink:0;}
+.clock-face{fill:none;stroke:rgba(255,165,0,0.25);stroke-width:2;}
+.clock-rim{fill:none;stroke:#ffb84d;stroke-width:2;}
+.clock-hour{stroke:#ffb84d;stroke-width:2.5;stroke-linecap:round;transform-origin:24px 24px;}
+.clock-minute{stroke:#ffb84d;stroke-width:2;stroke-linecap:round;transform-origin:24px 24px;}
+.clock-second{stroke:#ff6b6b;stroke-width:1.5;stroke-linecap:round;transform-origin:24px 24px;transition:transform .1s cubic-bezier(.4,2.08,.55,.44);}
+.clock-dot{fill:#ffb84d;}
+.urgency-title{font-size:clamp(1.8rem,4vw,3rem);font-weight:700;letter-spacing:-1.5px;line-height:1.05;margin-bottom:18px;position:relative;z-index:1;}
+.urgency-title span{color:#ffb84d;}
+.urgency-text{color:var(--m);font-size:.92rem;max-width:660px;margin:0 auto 56px;line-height:1.9;font-weight:300;position:relative;z-index:1;}
+.urgency-stats{display:flex;justify-content:center;gap:0;position:relative;z-index:1;border-top:1px solid rgba(255,165,0,0.15);border-bottom:1px solid rgba(255,165,0,0.15);}
+.u-stat{flex:1;padding:36px 24px;text-align:center;border-right:1px solid rgba(255,165,0,0.15);}
+.u-stat:last-child{border-right:none;}
+.u-num{font-size:2.6rem;font-weight:700;color:#ffb84d;font-family:'Space Grotesk',sans-serif;letter-spacing:-1px;line-height:1;}
+.u-lbl{font-size:.84rem;color:var(--m);margin-top:10px;line-height:1.6;}
+.urgency-inner{padding:72px 64px;position:relative;z-index:1;}
+.urgency-wrap .pbar{position:relative;z-index:1;}
+
+/* ── STATS ── */
+#stats{min-height:auto;padding:0 60px 110px;}
+.s-grid{display:grid;grid-template-columns:repeat(4,1fr);}
+.s-cell{
+  padding:44px 32px;text-align:center;
+  border-right:1px solid var(--gb);position:relative;
+  transition:background .4s;
+}
+.s-cell:last-child{border-right:none;}
+.s-cell:hover{background:rgba(77,150,255,0.04);}
+.s-num{font-size:2.8rem;font-weight:700;letter-spacing:-1px;line-height:1;margin-bottom:10px;}
+.c1{color:var(--p4);} .c2{color:var(--p5);} .c3{color:var(--p3);} .c4{color:var(--p2);}
+.s-lbl{font-size:.82rem;color:var(--m);letter-spacing:.5px;}
+
+/* Section eyebrow */
+.ey{font-family:'DM Mono',monospace;font-size:.75rem;color:var(--m);letter-spacing:3px;text-transform:uppercase;margin-bottom:12px;opacity:.9;}
+.sh{font-size:clamp(2rem,4vw,3rem);font-weight:700;letter-spacing:-1px;line-height:1.05;margin-bottom:14px;}
+.sp{color:var(--m);font-size:.88rem;font-weight:300;line-height:1.8;}
+
+/* ── VISION / MISSION ── */
+#vision{min-height:auto;}
+.vm-layout{display:grid;grid-template-columns:1fr 2fr;gap:64px;align-items:start;}
+.vm-side{position:sticky;top:130px;}
+.vm-side h2{font-size:clamp(2.5rem,4vw,3.8rem);font-weight:700;letter-spacing:-2px;line-height:.95;margin-bottom:16px;}
+.vm-side p{color:var(--m);font-size:.85rem;font-weight:300;line-height:1.8;}
+.vm-cards{display:flex;flex-direction:column;gap:2px;}
+.vm-c{padding:44px;position:relative;}
+.vm-tag{font-family:'DM Mono',monospace;font-size:.75rem;color:var(--m);letter-spacing:3px;margin-bottom:16px;padding-left:16px;}
+.vm-c h3{font-size:1.35rem;font-weight:700;letter-spacing:-.3px;margin-bottom:14px;padding-left:16px;}
+.vm-c p{color:var(--m);font-size:.95rem;line-height:1.9;font-weight:300;padding-left:16px;}
+
+/* ── SERVICES ── */
+#services{min-height:auto;}
+.svc-header{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:48px;gap:40px;}
+.svc-header h2{font-size:clamp(2rem,4vw,3.2rem);font-weight:700;letter-spacing:-1.5px;line-height:1.0;max-width:380px;}
+.svc-header p{color:var(--m);font-size:.87rem;font-weight:300;line-height:1.8;max-width:360px;}
+.svc-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--gb);}
+.svc-cell{
+  padding:36px 30px;background:var(--deep);position:relative;
+  transition:background .35s;overflow:hidden;cursor:default;
+}
+.svc-cell::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:0;
+  background:linear-gradient(to bottom,rgba(77,150,255,0.07),transparent);
+  transition:height .4s;
+}
+.svc-cell:hover::before{height:100%;}
+.svc-cell:hover{background:rgba(8,6,18,.98);}
+.svc-idx{font-family:'DM Mono',monospace;font-size:.75rem;color:var(--m);opacity:.8;margin-bottom:18px;letter-spacing:2px;}
+.svc-icon{font-size:1.8rem;margin-bottom:16px;display:block;}
+.svc-cell h4{font-size:.95rem;font-weight:700;margin-bottom:10px;letter-spacing:-.2px;}
+.svc-cell p{font-size:.9rem;color:var(--m);line-height:1.7;font-weight:300;}
+.svc-bot{position:absolute;bottom:0;left:0;right:0;height:2px;opacity:0;transition:opacity .4s;}
+.svc-cell:hover .svc-bot{opacity:.7;}
+.b1{background:linear-gradient(to right,var(--p4),var(--p5));}
+.b2{background:linear-gradient(to right,var(--p5),var(--p1));}
+.b3{background:linear-gradient(to right,var(--p1),var(--p2));}
+.b4{background:linear-gradient(to right,var(--p2),var(--p3));}
+.b5{background:linear-gradient(to right,var(--p3),var(--p4));}
+.b6{background:linear-gradient(to right,var(--p4),var(--p1));}
+
+/* ── ABOUT ── */
+#about{min-height:auto;}
+.ab-grid{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--gb);}
+.ab-l{padding:56px;background:var(--deep);}
+.ab-l h2{font-size:clamp(1.8rem,3vw,2.6rem);font-weight:700;letter-spacing:-1px;line-height:1.1;margin-bottom:16px;}
+.ab-l p{color:var(--m);font-size:.87rem;line-height:1.9;font-weight:300;margin-bottom:12px;}
+.flag{display:inline-flex;align-items:center;gap:8px;font-size:.84rem;color:var(--m);margin-top:22px;padding:10px 18px;border:1px solid var(--gb);}
+.ab-r{padding:56px;background:rgba(255,255,255,.01);display:flex;flex-direction:column;gap:18px;}
+.fact{display:flex;align-items:flex-start;gap:16px;padding:20px;border:1px solid var(--gb);position:relative;overflow:hidden;transition:border-color .3s;}
+.fact:hover{border-color:rgba(255,255,255,0.16);}
+.fact::before{content:'';position:absolute;top:0;left:0;width:2px;height:100%;}
+.f1::before{background:var(--p4);} .f2::before{background:var(--p5);} .f3::before{background:var(--p3);} .f4::before{background:var(--p2);}
+.fact-ic{font-size:1.15rem;flex-shrink:0;margin-top:3px;}
+.fact-v{font-size:1.35rem;font-weight:700;letter-spacing:-.5px;margin-bottom:3px;}
+.fact-l{font-size:.84rem;color:var(--m);font-weight:300;line-height:1.5;}
+
+/* ── TESTIMONIALS ── */
+#testimonials{min-height:auto;}
+.tg{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--gb);margin-top:48px;}
+.tc{padding:36px;background:var(--deep);position:relative;overflow:hidden;transition:background .3s;}
+.tc:hover{background:rgba(10,8,22,.98);}
+.tc-bar{position:absolute;top:0;left:0;right:0;height:1px;}
+.tb1{background:linear-gradient(to right,var(--p4),var(--p5));}
+.tb2{background:linear-gradient(to right,var(--p5),var(--p1));}
+.tb3{background:linear-gradient(to right,var(--p1),var(--p3));}
+.tc-stars{font-size:.88rem;letter-spacing:3px;margin-bottom:12px;color:var(--p2);}
+.tc-q{font-size:2rem;color:rgba(255,255,255,0.07);line-height:1;margin-bottom:10px;font-weight:700;}
+.tc p{font-size:.92rem;color:var(--m);line-height:1.85;font-weight:300;font-style:italic;margin-bottom:20px;}
+.tc-a{display:flex;align-items:center;gap:10px;padding-top:16px;border-top:1px solid var(--gb);}
+.tc-av{width:36px;height:36px;border:1px solid var(--gb);display:flex;align-items:center;justify-content:center;font-size:.84rem;font-weight:700;flex-shrink:0;}
+.tc-nm{font-size:.92rem;font-weight:600;}
+.tc-rl{font-size:.82rem;color:var(--m);}
+.tc-cy{font-size:.78rem;color:var(--p4);margin-top:1px;}
+
+/* ── FAQ ── */
+#faq{min-height:auto;}
+.faq-wrap{display:grid;grid-template-columns:1fr 2fr;gap:80px;align-items:start;}
+.faq-l h2{font-size:clamp(2rem,3.5vw,2.8rem);font-weight:700;letter-spacing:-1px;line-height:1.05;margin-bottom:14px;}
+.faq-l p{color:var(--m);font-size:.85rem;line-height:1.8;font-weight:300;}
+.faq-list{display:flex;flex-direction:column;}
+.fi{border-bottom:1px solid var(--gb);overflow:hidden;}
+.fi:first-child{border-top:1px solid var(--gb);}
+.fq{padding:22px 0;display:flex;align-items:center;justify-content:space-between;gap:16px;cursor:pointer;font-size:.9rem;font-weight:500;transition:color .3s;letter-spacing:-.1px;}
+.fq:hover,.fi.open .fq{color:var(--p4);}
+.fp{width:22px;height:22px;min-width:22px;border:1px solid var(--gb);display:flex;align-items:center;justify-content:center;font-size:.88rem;transition:transform .35s,border-color .3s;color:var(--m);}
+.fi.open .fp{transform:rotate(45deg);border-color:var(--p4);color:var(--p4);}
+.fa{max-height:0;overflow:hidden;transition:max-height .42s ease;}
+.fa-inner{padding:0 0 22px;color:var(--m);font-size:.93rem;line-height:1.9;font-weight:300;}
+.fi.open .fa{max-height:280px;}
+
+/* ── CONTACT ── */
+#contact{min-height:auto;}
+.ct-head{margin-bottom:52px;}
+.ct-head h2{font-size:clamp(2.2rem,5vw,4.5rem);font-weight:700;letter-spacing:-2.5px;line-height:.92;margin-bottom:12px;}
+.ct-grid{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--gb);}
+.ct-l{padding:48px;background:var(--deep);}
+.ct-r{padding:48px;background:rgba(255,255,255,.01);}
+.ct-l p{color:var(--m);font-size:.87rem;line-height:1.9;font-weight:300;margin-bottom:32px;}
+.ci{display:flex;align-items:center;gap:14px;padding:14px 0;border-bottom:1px solid var(--gb);}
+.ci:first-of-type{border-top:1px solid var(--gb);}
+.ci-i{width:32px;height:32px;border:1px solid var(--gb);display:flex;align-items:center;justify-content:center;font-size:.85rem;flex-shrink:0;}
+.ci-t{font-size:.9rem;font-weight:600;display:block;}
+.ci-v{font-size:.84rem;color:var(--m);}
+.pf{display:flex;flex-direction:column;gap:6px;margin-bottom:18px;}
+.pf label{font-family:'DM Mono',monospace;font-size:.72rem;letter-spacing:2px;text-transform:uppercase;color:var(--m);}
+.pf input,.pf select,.pf textarea{
+  background:transparent;border:none;border-bottom:1px solid var(--gb);
+  padding:11px 0;color:var(--w);font-family:'Space Grotesk',sans-serif;
+  font-size:.88rem;font-weight:300;outline:none;transition:border-color .3s;
+}
+.pf input:focus,.pf select:focus,.pf textarea:focus{border-bottom-color:var(--p4);}
+.pf select option{background:#03010a;}
+.pf textarea{height:80px;resize:none;}
+.pf-row{display:grid;grid-template-columns:1fr 1fr;gap:22px;}
+.sub{
+  width:100%;margin-top:8px;
+  background:linear-gradient(135deg,var(--p4),var(--p5));
+  color:#03010a;border:none;padding:15px;
+  font-family:'Space Grotesk',sans-serif;font-size:.82rem;font-weight:700;
+  letter-spacing:1px;text-transform:uppercase;cursor:pointer;
+  transition:transform .3s,box-shadow .3s;
+}
+.sub:hover{transform:translateY(-2px);box-shadow:0 10px 32px rgba(77,150,255,0.3);}
+
+/* ── Footer ── */
+footer{
+  position:relative;z-index:2;border-top:1px solid var(--gb);
+  padding:32px 60px;background:var(--deep);
+  display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px;
+}
+.flogo{font-weight:700;font-size:.95rem;letter-spacing:-.2px;}
+.flogo em{font-style:normal;color:var(--p4);}
+footer p{font-size:.84rem;color:var(--m);}
+.fls{display:flex;gap:18px;}
+.fls a{color:var(--m);text-decoration:none;font-size:.84rem;transition:color .3s;}
+.fls a:hover{color:var(--w);}
+
+/* ── SVG visual panels ── */
+.prism-svg{border:1px solid rgba(255,255,255,0.08);background:rgba(255,255,255,0.02);overflow:hidden;position:relative;}
+.prism-svg::before{content:'';display:block;height:1px;background:linear-gradient(to right,transparent,rgba(255,255,255,0.18),transparent);}
+.prism-svg object{width:100%;height:100%;display:block;border:none;}
+.prism-svg .pbar-top{height:2px;background:linear-gradient(to right,var(--p4),var(--p5),var(--p1));}
+
+/* ── Responsive ── */
+@media(max-width:960px){
+  .split-grid{grid-template-columns:1fr!important;}
+  .nc,.nr{display:none;}
+  section{padding:80px 24px;}
+  #stats{padding:0 24px 80px;}
+  .s-grid,.svc-grid,.ab-grid,.ct-grid,.tg{grid-template-columns:1fr;}
+  .s-cell{border-right:none;border-bottom:1px solid var(--gb);}
+  .vm-layout,.faq-wrap,.svc-header{grid-template-columns:1fr;}
+  .vm-side{position:static;}
+  .pf-row{grid-template-columns:1fr;}
+  .h-title{letter-spacing:-2px;}
+  footer{padding:24px;}
+  .urgency-inner{padding:40px 24px;}
+  .urgency-stats{flex-wrap:wrap;}
+  .u-stat{flex:1 1 calc(50% - 1px);border-bottom:1px solid rgba(255,165,0,0.15);}
+  .u-stat:nth-child(3),.u-stat:nth-child(4){border-bottom:none;}
+  .urgency-title{font-size:clamp(1.4rem,5vw,2rem);}
+  .u-num{font-size:2rem;}
+}
+</style>
+</head>
+<body>
+
+<!-- Cursor -->
+<div class="c-dot" id="cdot"></div>
+<div class="c-cross" id="ccross"></div>
+<div class="c-ring" id="cring"></div>
+
+<!-- Canvas -->
+<canvas id="bg"></canvas>
+
+<!-- Nav -->
+<nav id="nav">
+  <div class="nl"><div class="logo">AI.<em>Connections</em>Inc</div></div>
+  <ul class="nc">
+    <li><a href="#vision">Vision</a></li>
+    <li><a href="#services">Services</a></li>
+    <li><a href="#about">About</a></li>
+    <li><a href="#faq">FAQ</a></li>
+    <li><a href="#testimonials">Clients</a></li>
+  </ul>
+  <div class="nr"><a href="#contact" class="ncta">Connect →</a></div>
+</nav>
+
+<!-- ── HERO ── -->
+<section id="hero">
+  <div class="h-coord">AI.ConnectionsInc &mdash; Canadian AI Solutions &mdash; Est. 2024</div>
+  <h1 class="h-title">
+    <span class="l1">Win</span>
+    <span class="l2">With AI.</span>
+  </h1>
+  <p class="h-tagline">Delivered Fast. Built Affordably.</p>
+  <p class="h-sub">Fast, affordable AI solutions for small and medium-sized Canadian businesses. Every day you wait, the gap grows. We close it — in weeks, not months.</p>
+  <div class="h-warning">⚠&nbsp; While you wait, your competitors are already growing with AI.</div>
+  <div class="h-btns">
+    <a href="#contact" class="btn-p">Start Today</a>
+    <a href="#services" class="btn-g">See Services</a>
+  </div>
+  <div class="h-hint">
+    <div class="h-arrow">↓</div>
+    <span>Scroll deeper</span>
+  </div>
+</section>
+
+<!-- ── STATS ── -->
+<section id="stats">
+  <div class="container depth">
+    <div class="crystal" style="overflow:hidden;">
+      <div class="pbar"></div>
+      <div class="s-grid">
+        <div class="s-cell"><div class="s-num c1">500+</div><div class="s-lbl">Businesses Empowered</div></div>
+        <div class="s-cell"><div class="s-num c2">95%</div><div class="s-lbl">Client Satisfaction</div></div>
+        <div class="s-cell"><div class="s-num c3">10 Days</div><div class="s-lbl">Average Delivery</div></div>
+        <div class="s-cell"><div class="s-num c4">60% Less</div><div class="s-lbl">vs Enterprise AI Firms</div></div>
+      </div>
+      <div class="pbar" style="transform:scaleX(-1);"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ── URGENCY ── -->
+<section id="urgency">
+  <div class="container depth">
+    <div class="urgency-wrap crystal" style="border-color:rgba(255,165,0,0.2);">
+      <div class="pbar" style="background:linear-gradient(to right,var(--p2),var(--p1),var(--p2));"></div>
+      <div class="urgency-inner">
+        <div class="ey" style="color:#ffb84d;opacity:1;">⚠ &nbsp;The Stakes</div>
+        <svg class="clock" viewBox="0 0 48 48" style="position:absolute;top:24px;right:24px;">
+          <circle class="clock-face" cx="24" cy="24" r="21"/>
+          <circle class="clock-rim"  cx="24" cy="24" r="21"/>
+          <line class="clock-hour"   id="ck-h" x1="24" y1="24" x2="24" y2="11"/>
+          <line class="clock-minute" id="ck-m" x1="24" y1="24" x2="24" y2="7"/>
+          <line class="clock-second" id="ck-s" x1="24" y1="27" x2="24" y2="6"/>
+          <circle class="clock-dot"  cx="24" cy="24" r="2"/>
+        </svg>
+        <h2 class="urgency-title">The Clock Is Ticking.<br><span>Are You Being Left Behind?</span></h2>
+        <p class="urgency-text">Every day without AI is a day your competitors gain ground. Businesses embracing AI are growing faster, serving customers better, and cutting costs dramatically. The question isn't <em>if</em> you should adopt AI — it's whether you can afford to wait any longer.</p>
+        <div class="urgency-stats">
+          <div class="u-stat"><div class="u-num">72%</div><div class="u-lbl">of businesses plan to adopt AI<br>in the next 12 months</div></div>
+          <div class="u-stat"><div class="u-num">3×</div><div class="u-lbl">faster growth for AI-adopting<br>SMBs vs non-adopters</div></div>
+          <div class="u-stat"><div class="u-num">40%</div><div class="u-lbl">average operational cost reduction<br>through AI automation</div></div>
+          <div class="u-stat"><div class="u-num">Now</div><div class="u-lbl">The best time to start was yesterday.<br>This is the second best.</div></div>
+        </div>
+      </div>
+      <div class="pbar" style="background:linear-gradient(to right,var(--p2),var(--p1),var(--p2));transform:scaleX(-1);"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ── VISION / MISSION ── -->
+<section id="vision">
+  <div class="container">
+    <div class="vm-layout">
+      <div class="vm-side depth">
+        <div class="ey">§ 01</div>
+        <h2>Vision<br>&amp;<br>Mission</h2>
+        <p>The foundation of everything we build. Two commitments that drive every decision.</p>
+      </div>
+      <div class="vm-cards depth">
+        <div class="crystal vm-c" style="margin-bottom:2px;">
+          <div class="pbarv"></div>
+          <div class="vm-tag">01 — VISION</div>
+          <h3>A Canada Where Every Business Has AI</h3>
+          <p>To be Canada's most trusted catalyst for AI adoption — a future where every small and medium-sized business, from Halifax to Victoria, has access to the transformative power of artificial intelligence. Geography, budget, and technical complexity are no longer barriers to competing in the AI era. A level playing field, built right here at home.</p>
+        </div>
+        <div class="crystal vm-c">
+          <div class="pbarv" style="background:linear-gradient(to bottom,var(--p5),var(--p1));"></div>
+          <div class="vm-tag">02 — MISSION</div>
+          <h3>Deliver Fast. Price Fairly. Stay With You.</h3>
+          <p>To deliver fast, affordable, and practical AI-powered solutions that empower Canadian SMBs to compete, grow, and thrive in the digital economy. We build solutions that work — not just demos. We move quickly so your business doesn't wait. We price fairly so AI is accessible, not just aspirational. And we stay by your side as the technology and your business evolve.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── SERVICES ── -->
+<section id="services">
+  <div class="container">
+    <div class="svc-header depth">
+      <div><div class="ey">§ 02 — What We Build</div><h2 class="sh" style="margin-bottom:0;">AI Solutions That<br>Actually Work</h2></div>
+      <p class="sp">Practical, deployable tools built for how real Canadian businesses operate — not how enterprise textbooks say they should. No jargon. No bloat.</p>
+    </div>
+    <div class="svc-grid depth">
+      <div class="svc-cell"><div class="svc-idx">01</div><span class="svc-icon">🤖</span><h4>Business Automation</h4><p>Eliminate repetitive tasks. AI agents that work 24/7 — invoicing, scheduling, data entry, reporting.</p><div class="svc-bot b1"></div></div>
+      <div class="svc-cell"><div class="svc-idx">02</div><span class="svc-icon">💬</span><h4>AI Customer Experience</h4><p>Chatbots and virtual assistants that handle inquiries, bookings, and support around the clock.</p><div class="svc-bot b2"></div></div>
+      <div class="svc-cell"><div class="svc-idx">03</div><span class="svc-icon">📊</span><h4>Data Analytics &amp; Insights</h4><p>AI dashboards that surface trends, predict behaviour, and reveal opportunities in your data.</p><div class="svc-bot b3"></div></div>
+      <div class="svc-cell"><div class="svc-idx">04</div><span class="svc-icon">📣</span><h4>AI-Powered Marketing</h4><p>Personalized campaigns at scale. Content, segmentation, email automation, ad optimization.</p><div class="svc-bot b4"></div></div>
+      <div class="svc-cell"><div class="svc-idx">05</div><span class="svc-icon">⚙️</span><h4>Custom AI Development</h4><p>Bespoke systems for your exact industry — predictive inventory, document processing, and beyond.</p><div class="svc-bot b5"></div></div>
+      <div class="svc-cell"><div class="svc-idx">06</div><span class="svc-icon">🧭</span><h4>AI Strategy &amp; Consulting</h4><p>Assess your business, identify opportunities, build a clear actionable roadmap. Start here.</p><div class="svc-bot b6"></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ── ABOUT ── -->
+<section id="about">
+  <div class="container">
+    <div class="ey depth">§ 03 — About Us</div>
+    <div class="ab-grid depth" style="margin-top:24px;">
+      <div class="ab-l">
+        <h2>Built By Canadians,<br>For Canadian Business</h2>
+        <p>AI.ConnectionsInc was founded on a simple belief: the AI revolution shouldn't be exclusive to Fortune 500 companies. We saw brilliant Canadian entrepreneurs struggling to compete while larger competitors rapidly deployed AI to gain structural advantages.</p>
+        <p>So we built a company to fix that. One that moves fast, prices fairly, and solves real business problems — not hypothetical enterprise ones. We're here to grow your business, not sell you technology.</p>
+        <div class="flag">🍁 Connections X Media Inc. — 100% Canadian-owned &amp; operated — Serving coast to coast</div>
+      </div>
+      <div class="ab-r">
+        <div class="fact f1"><div class="fact-ic">⚡</div><div><div class="fact-v">1–3 Weeks</div><div class="fact-l">From first call to live AI solution.<br>Not quarters. Weeks.</div></div></div>
+        <div class="fact f2"><div class="fact-ic">💰</div><div><div class="fact-v">60% Less</div><div class="fact-l">Compared to enterprise AI firms.<br>Same quality. No enterprise overhead.</div></div></div>
+        <div class="fact f3"><div class="fact-ic">🛡️</div><div><div class="fact-v">90-Day Guarantee</div><div class="fact-l">If benchmarks aren't met we iterate free<br>until they are. We don't disappear.</div></div></div>
+        <div class="fact f4"><div class="fact-ic">🔒</div><div><div class="fact-v">PIPEDA Compliant</div><div class="fact-l">Privacy-first by design. Canadian<br>data centres available on request.</div></div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── TESTIMONIALS ── -->
+<section id="testimonials">
+  <div class="container">
+    <div class="depth">
+      <div class="ey">§ 04 — Client Stories</div>
+      <h2 class="sh">Canadian Businesses Winning with AI</h2>
+      <p class="sp">Real results. No enterprise budgets. No dedicated tech teams.</p>
+    </div>
+    <div class="tg depth" style="margin-top:0;">
+      <div class="tc"><div class="tc-bar tb1"></div><div class="tc-stars">★★★★★</div><div class="tc-q">"</div><p>"Skeptical AI was for a family-owned restaurant group. They built a chatbot and automated reservations in three weeks. Staff saves 15 hrs/week and satisfaction jumped 40%. True believers now."</p><div class="tc-a"><div class="tc-av">MK</div><div><div class="tc-nm">Maria Kowalski</div><div class="tc-rl">Owner, Harvest Table Group</div><div class="tc-cy">📍 Toronto, ON</div></div></div></div>
+      <div class="tc"><div class="tc-bar tb2"></div><div class="tc-stars">★★★★★</div><div class="tc-q">"</div><p>"Automated inventory forecasting and personalized email campaigns live in under a month. Sales up 28% in Q1 and my team finally has time for strategy, not spreadsheets."</p><div class="tc-a"><div class="tc-av">JT</div><div><div class="tc-nm">James Tremblay</div><div class="tc-rl">CEO, NorthShore Outdoors</div><div class="tc-cy">📍 Vancouver, BC</div></div></div></div>
+      <div class="tc"><div class="tc-bar tb3"></div><div class="tc-stars">★★★★★</div><div class="tc-q">"</div><p>"A scheduling AI routes our technicians optimally and predicts client maintenance needs before problems arise. We now serve 25% more customers weekly without adding staff."</p><div class="tc-a"><div class="tc-av">LC</div><div><div class="tc-nm">Luc Charette</div><div class="tc-rl">President, Arctic Comfort HVAC</div><div class="tc-cy">📍 Québec City, QC</div></div></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ── FAQ ── -->
+<section id="faq">
+  <div class="container">
+    <div class="faq-wrap">
+      <div class="faq-l depth">
+        <div class="ey">§ 05 — FAQ</div>
+        <h2>Questions We Hear Often</h2>
+        <p>Straight answers. No corporate speak.</p>
+      </div>
+      <div class="faq-list depth">
+        <div class="fi"><div class="fq"><span>Do I need technical knowledge or an IT team?</span><div class="fp">+</div></div><div class="fa"><div class="fa-inner">Absolutely not. Every solution is designed for business owners and staff — not developers. Intuitive interfaces, plain-language dashboards, full team training included. If you can use a smartphone, you can use our tools.</div></div></div>
+        <div class="fi"><div class="fq"><span>How much does an AI solution cost for a small business?</span><div class="fp">+</div></div><div class="fa"><div class="fa-inner">Pricing is designed for SMB budgets — a fraction of enterprise AI firms. Projects typically range from a few thousand to tens of thousands depending on complexity. Flexible payment options available. Book a free consult for a transparent, itemized estimate with no surprises.</div></div></div>
+        <div class="fi"><div class="fq"><span>How quickly can I have something live?</span><div class="fp">+</div></div><div class="fa"><div class="fa-inner">2–6 weeks from initial consultation in most cases. We use proven frameworks and pre-built components to deliver fast. Most clients see a working prototype in the first week of the build phase.</div></div></div>
+        <div class="fi"><div class="fq"><span>Is my business data safe and private?</span><div class="fp">+</div></div><div class="fa"><div class="fa-inner">Data privacy is non-negotiable. All solutions comply with PIPEDA and applicable provincial privacy laws. Your data stays yours — never sold, shared, or used to train models. Canadian data centres available for data residency requirements.</div></div></div>
+        <div class="fi"><div class="fq"><span>What if results don't meet expectations?</span><div class="fp">+</div></div><div class="fa"><div class="fa-inner">We define clear, measurable success metrics before any project begins. If agreed benchmarks aren't met within 90 days post-launch, we iterate and optimize at no additional cost until they are. We don't disappear after delivery.</div></div></div>
+        <div class="fi"><div class="fq"><span>Do you provide ongoing support after the solution launches?</span><div class="fp">+</div></div><div class="fa"><div class="fa-inner">Yes — and this is a core part of how we work. We offer monthly support and optimization retainers that keep your AI solution performing at its best as your business evolves. AI systems improve with more data over time, and we actively monitor and tune your solution so it keeps getting better, not just sitting still after go-live.</div></div></div>
+        <div class="fi"><div class="fq"><span>My business is in a niche industry — can you still help?</span><div class="fp">+</div></div><div class="fa"><div class="fa-inner">Absolutely — niche industries are often where AI creates the most dramatic advantages. We've worked across hospitality, retail, healthcare, professional services, manufacturing, real estate, logistics, and more. Our discovery process is designed to deeply understand your specific workflows and competitive dynamics before we build a single line of code. The more specific your industry, the more targeted we can make your solution.</div></div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── CONTACT ── -->
+<section id="contact">
+  <div class="container">
+    <div class="ct-head depth">
+      <div class="ey">§ 06 — Connect</div>
+      <h2>Let's Build<br><span style="background:linear-gradient(to right,var(--p4),var(--p5),var(--p1));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">Your AI Future</span></h2>
+    </div>
+    <div class="ct-grid depth">
+      <div class="ct-l">
+        <p>Stop watching competitors pull ahead. Book a free, no-pressure consultation and we'll show you exactly how AI can work for your specific business — clear plan, honest pricing, real timeline.</p>
+        <div class="ci"><div class="ci-i">✉</div><div><span class="ci-t">Email</span><span class="ci-v">info@connectionsinc.ca</span></div></div>
+        <div class="ci"><div class="ci-i">📞</div><div><span class="ci-t">Phone</span><span class="ci-v">+1 (778) 682-5900</span></div></div>
+        <div class="ci"><div class="ci-i">📍</div><div><span class="ci-t">Base</span><span class="ci-v">Langley, BC — All of Canada</span></div></div>
+        <div class="ci"><div class="ci-i">⏱</div><div><span class="ci-t">Response</span><span class="ci-v">Within 24 hours, guaranteed</span></div></div>
+      </div>
+      <div class="ct-r">
+        <div class="pf-row">
+          <div class="pf"><label>First Name</label><input type="text" placeholder="John"></div>
+          <div class="pf"><label>Last Name</label><input type="text" placeholder="Smith"></div>
+        </div>
+        <div class="pf"><label>Business Email</label><input type="email" placeholder="john@yourbusiness.ca"></div>
+        <div class="pf"><label>Business Name</label><input type="text" placeholder="Your Business Inc."></div>
+        <div class="pf"><label>Province</label>
+          <select>
+            <option>Select province...</option>
+            <option>Ontario</option><option>British Columbia</option><option>Alberta</option>
+            <option>Quebec</option><option>Nova Scotia</option><option>Manitoba</option>
+            <option>Saskatchewan</option><option>Other</option>
+          </select>
+        </div>
+        <div class="pf"><label>How Can We Help?</label><textarea placeholder="Describe your business challenges and what you hope AI can solve..."></textarea></div>
+        <button class="sub" id="subBtn">Book Free Consultation →</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="flogo">AI.<em>Connections</em>Inc</div>
+  <p>© 2025 Connections X Media Inc. All rights reserved. AI.ConnectionsInc is an initiative of Connections X Media Inc. 🍁</p>
+  <div class="fls"><a href="#">Privacy</a><a href="#">Terms</a><a href="#">LinkedIn</a></div>
+</footer>
+
+<script>
+
+// ── Ticking Clock ──
+(function tickClock() {
+  const ckH = document.getElementById('ck-h');
+  const ckM = document.getElementById('ck-m');
+  const ckS = document.getElementById('ck-s');
+  if (ckH && ckM && ckS) {
+    function update() {
+      const now = new Date();
+      const s = now.getSeconds();
+      const m = now.getMinutes() + s / 60;
+      const h = (now.getHours() % 12) + m / 60;
+      const sd = s * 6;           // 360/60
+      const md = m * 6;
+      const hd = h * 30;          // 360/12
+      ckS.style.transform = `rotate(${sd}deg)`;
+      ckM.style.transform = `rotate(${md}deg)`;
+      ckH.style.transform = `rotate(${hd}deg)`;
+    }
+    update();
+    setInterval(update, 1000);
+  }
+})();
+
+// ── Cursor ──
+const cdot = document.getElementById('cdot');
+const ccross = document.getElementById('ccross');
+const cring = document.getElementById('cring');
+let mx = 0, my = 0, lx = 0, ly = 0, angle = 0;
+
+document.addEventListener('mousemove', e => { mx = e.clientX; my = e.clientY; });
+
+;(function cursorLoop() {
+  cdot.style.left = mx + 'px';
+  cdot.style.top = my + 'px';
+  ccross.style.left = mx + 'px';
+  ccross.style.top = my + 'px';
+  lx += (mx - lx) * 0.12;
+  ly += (my - ly) * 0.12;
+  cring.style.left = lx + 'px';
+  cring.style.top = ly + 'px';
+  angle += 0.5;
+  ccross.style.transform = `translate(-50%,-50%) rotate(${angle}deg)`;
+  requestAnimationFrame(cursorLoop);
+})();
+
+const HOVER = 'a,button,input,select,textarea,.svc-cell,.fq,.tc,.fact,.ncta,.btn-p,.btn-g';
+document.querySelectorAll(HOVER).forEach(el => {
+  el.addEventListener('mouseenter', () => cring.classList.add('big'));
+  el.addEventListener('mouseleave', () => cring.classList.remove('big'));
+});
+
+// ── Canvas Mesh ──
+const canvas = document.getElementById('bg');
+const ctx = canvas.getContext('2d');
+let W = 0, H = 0;
+
+function setSize() { W = canvas.width = window.innerWidth; H = canvas.height = window.innerHeight; }
+setSize();
+
+// Grid config
+const COLS = 24, ROWS = 15;
+let pts = [];
+
+function buildGrid() {
+  pts = [];
+  const cw = W / (COLS - 1), ch = H / (ROWS - 1);
+  for (let r = 0; r < ROWS; r++) {
+    for (let c = 0; c < COLS; c++) {
+      pts.push({
+        ox: c * cw,
+        oy: r * ch,
+        x: c * cw,
+        y: r * ch,
+        phase: Math.random() * Math.PI * 2,
+        spd: 0.25 + Math.random() * 0.35
+      });
+    }
+  }
+}
+buildGrid();
+
+window.addEventListener('resize', () => { setSize(); buildGrid(); });
+
+// Mouse tracking for mesh
+let tmx = W * 0.5, tmy = H * 0.5, smx = W * 0.5, smy = H * 0.5;
+document.addEventListener('mousemove', e => { tmx = e.clientX; tmy = e.clientY; });
+
+function idx(r, c) { return r * COLS + c; }
+
+function drawMesh(t) {
+  // Smooth mouse
+  smx += (tmx - smx) * 0.06;
+  smy += (tmy - smy) * 0.06;
+
+  ctx.clearRect(0, 0, W, H);
+
+  // Background
+  const bgGrd = ctx.createLinearGradient(0, 0, W, H);
+  bgGrd.addColorStop(0, '#03010a');
+  bgGrd.addColorStop(1, '#05020f');
+  ctx.fillStyle = bgGrd;
+  ctx.fillRect(0, 0, W, H);
+
+  // Animate points
+  const tt = t * 0.001;
+  pts.forEach(p => {
+    const dx = smx - p.ox, dy = smy - p.oy;
+    const d = Math.sqrt(dx * dx + dy * dy) || 1;
+    const pull = Math.max(0, 1 - d / 420) * 44; // stronger mouse warp
+    const wave = Math.sin(tt * p.spd + p.phase) * 14
+               + Math.cos(tt * p.spd * 0.6 + p.phase * 1.3) * 7;
+    p.x = p.ox + (dx / d) * pull + Math.cos(p.phase) * wave;
+    p.y = p.oy + (dy / d) * pull + Math.sin(p.phase) * wave;
+  });
+
+  // Draw triangles
+  for (let r = 0; r < ROWS - 1; r++) {
+    for (let c = 0; c < COLS - 1; c++) {
+      const tl = pts[idx(r, c)];
+      const tr = pts[idx(r, c + 1)];
+      const bl = pts[idx(r + 1, c)];
+      const br = pts[idx(r + 1, c + 1)];
+
+      // Mouse proximity brightness
+      const cx = (tl.ox + br.ox) * 0.5;
+      const cy = (tl.oy + br.oy) * 0.5;
+      const md = Math.sqrt((smx - cx) ** 2 + (smy - cy) ** 2);
+      const bright = Math.max(0, 1 - md / 480);
+
+      // Much more visible than before
+      const fillA = 0.04 + bright * 0.14;
+      const edgeA = 0.18 + bright * 0.36;
+
+      // Upper-left triangle
+      ctx.beginPath();
+      ctx.moveTo(tl.x, tl.y);
+      ctx.lineTo(tr.x, tr.y);
+      ctx.lineTo(bl.x, bl.y);
+      ctx.closePath();
+      ctx.fillStyle = `rgba(77,150,255,${fillA})`;
+      ctx.fill();
+      ctx.strokeStyle = `rgba(110,160,255,${edgeA})`;
+      ctx.lineWidth = 0.5;
+      ctx.stroke();
+
+      // Lower-right triangle
+      ctx.beginPath();
+      ctx.moveTo(tr.x, tr.y);
+      ctx.lineTo(br.x, br.y);
+      ctx.lineTo(bl.x, bl.y);
+      ctx.closePath();
+      ctx.fillStyle = `rgba(160,120,255,${fillA * 0.7})`;
+      ctx.fill();
+      ctx.strokeStyle = `rgba(180,140,255,${edgeA * 0.6})`;
+      ctx.lineWidth = 0.5;
+      ctx.stroke();
+    }
+  }
+
+  // Vertex dots near mouse
+  pts.forEach(p => {
+    const d = Math.sqrt((smx - p.ox) ** 2 + (smy - p.oy) ** 2);
+    const bright = Math.max(0, 1 - d / 320);
+    if (bright > 0.05) {
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, 1.5 + bright * 2, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(180,200,255,${0.15 + bright * 0.5})`;
+      ctx.fill();
+    }
+  });
+
+  // Large mouse glow
+  const mg = ctx.createRadialGradient(smx, smy, 0, smx, smy, 360);
+  mg.addColorStop(0, 'rgba(77,150,255,0.14)');
+  mg.addColorStop(0.4, 'rgba(77,150,255,0.05)');
+  mg.addColorStop(1, 'rgba(77,150,255,0)');
+  ctx.fillStyle = mg;
+  ctx.beginPath();
+  ctx.arc(smx, smy, 360, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Secondary colour glow (violet) offset from mouse
+  const sg = ctx.createRadialGradient(smx + 80, smy - 60, 0, smx + 80, smy - 60, 260);
+  sg.addColorStop(0, 'rgba(160,100,255,0.08)');
+  sg.addColorStop(1, 'rgba(160,100,255,0)');
+  ctx.fillStyle = sg;
+  ctx.beginPath();
+  ctx.arc(smx + 80, smy - 60, 260, 0, Math.PI * 2);
+  ctx.fill();
+}
+
+// ── Scroll depth — "going into the scene" ──
+let depthRaf = false;
+let depthCache = [];
+
+function getDocTop(el) {
+  // Walk offsetParent chain — fully transform-independent
+  let top = 0;
+  let node = el;
+  while (node) { top += node.offsetTop; node = node.offsetParent; }
+  return top;
+}
+
+function cacheDepthPositions() {
+  depthCache = document.querySelectorAll('.depth');
+}
+
+function runDepth() {
+  const vh = window.innerHeight;
+  const scrollY = window.scrollY;
+  depthCache.forEach(el => {
+    const docTop = getDocTop(el);
+    const elTop = docTop - scrollY;
+    // Fully clear when element's top reaches 65% down the viewport (still well within view)
+    // prog: 1 when entering from bottom edge, 0 once top crosses the 65% mark
+    const clearAt = vh * 0.50;
+    const raw = (elTop - clearAt) / (vh - clearAt);
+    const prog = Math.max(0, Math.min(1, raw));
+
+    el.style.transform = `translateY(${prog * 80}px) scale(${1 - prog * 0.14})`;
+    el.style.filter    = prog > 0.05 ? `blur(${prog * 12}px)` : '';
+    el.style.opacity   = `${1 - prog * 0.78}`;
+  });
+  depthRaf = false;
+}
+
+window.addEventListener('scroll', () => {
+  if (!depthRaf) { depthRaf = true; requestAnimationFrame(runDepth); }
+}, { passive: true });
+cacheDepthPositions();
+runDepth();
+
+// ── Nav frost ──
+window.addEventListener('scroll', () => {
+  document.getElementById('nav').classList.toggle('fr', window.scrollY > 60);
+}, { passive: true });
+
+// ── Crystal tilt on hover ──
+const TILT = '.crystal,.ab-grid,.ct-grid,.tg,.svc-grid';
+document.querySelectorAll(TILT).forEach(el => {
+  el.addEventListener('mousemove', e => {
+    const r = el.getBoundingClientRect();
+    const dx = (e.clientX - r.left - r.width  * 0.5) / (r.width  * 0.5);
+    const dy = (e.clientY - r.top  - r.height * 0.5) / (r.height * 0.5);
+    el.style.transform  = `perspective(1400px) rotateY(${dx * 2.5}deg) rotateX(${-dy * 2.5}deg)`;
+    el.style.transition = 'transform .08s linear';
+  });
+  el.addEventListener('mouseleave', () => {
+    el.style.transform  = '';
+    el.style.transition = 'transform .7s ease';
+  });
+});
+
+// ── FAQ accordion ──
+document.querySelectorAll('.fi').forEach(item => {
+  item.querySelector('.fq').addEventListener('click', () => {
+    const open = item.classList.contains('open');
+    document.querySelectorAll('.fi').forEach(i => i.classList.remove('open'));
+    if (!open) item.classList.add('open');
+  });
+});
+
+// ── Render loop ──
+let t0 = null;
+(function frame(ts) {
+  if (!t0) t0 = ts;
+  drawMesh(ts - t0);
+  requestAnimationFrame(frame);
+})(performance.now());
+
+// ── Form ──
+document.getElementById('subBtn').addEventListener('click', e => {
+  e.preventDefault();
+  const b = e.currentTarget;
+  b.textContent = '✓ Sent — we\'ll reply within 24 hours';
+  b.style.background = 'linear-gradient(135deg,#4ade80,#16a34a)';
+  b.style.color = '#fff';
+  setTimeout(() => {
+    b.textContent = 'Book Free Consultation →';
+    b.style.background = '';
+    b.style.color = '';
+  }, 5000);
+});
+</script>
+</body>
+</html>

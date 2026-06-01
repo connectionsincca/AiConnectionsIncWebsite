@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI.ConnectionsInc — Liquid Chrome</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=Manrope:wght@200;300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{
+  --ink:#080808; --chrome1:#b8c4d4; --chrome2:#6a7a90; --chrome3:#3a4455;
+  --accent:#4f5fff; --accent2:#a78bfa; --accent3:#06b6d4;
+  --glass:rgba(200,215,230,0.05); --glass-b:rgba(200,215,230,0.1);
+  --text:#f4f6fa; --muted:rgba(244,246,250,0.42);
+}
+html{scroll-behavior:smooth;}
+body{font-family:'Manrope',sans-serif;background:var(--ink);color:var(--text);overflow-x:hidden;cursor:none;}
+
+/* Cursor */
+#cur{position:fixed;width:10px;height:10px;border-radius:50%;background:var(--accent);pointer-events:none;z-index:9999;transform:translate(-50%,-50%);mix-blend-mode:screen;}
+#cur-trail{position:fixed;width:36px;height:36px;border-radius:50%;border:1px solid rgba(79,95,255,0.4);pointer-events:none;z-index:9998;transform:translate(-50%,-50%);transition:width .3s,height .3s;}
+
+/* Canvas */
+#bg{position:fixed;top:0;left:0;width:100%;height:100%;z-index:0;pointer-events:none;}
+
+/* Noise texture overlay */
+body::before{
+  content:'';position:fixed;inset:0;z-index:0;pointer-events:none;opacity:.025;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* Nav */
+nav{
+  position:fixed;top:0;left:0;right:0;z-index:100;
+  padding:22px 56px;display:flex;align-items:center;justify-content:space-between;
+}
+nav::after{
+  content:'';position:absolute;bottom:0;left:56px;right:56px;height:1px;
+  background:linear-gradient(to right,transparent,rgba(200,215,230,0.12),transparent);
+}
+nav.bg{background:rgba(8,8,8,0.88);backdrop-filter:blur(24px);}
+.nav-logo{font-family:'Syne',sans-serif;font-size:1.05rem;font-weight:800;letter-spacing:-.3px;}
+.nav-links{display:flex;gap:40px;list-style:none;}
+.nav-links a{color:var(--muted);text-decoration:none;font-size:.82rem;font-weight:400;letter-spacing:.5px;transition:color .3s;}
+.nav-links a:hover{color:var(--text);}
+.nav-btn{
+  background:none;border:1px solid rgba(200,215,230,0.18);padding:9px 24px;
+  border-radius:3px;color:var(--text);font-size:.82rem;font-weight:500;
+  text-decoration:none;letter-spacing:.5px;transition:all .3s;font-family:'Manrope',sans-serif;
+}
+.nav-btn:hover{background:rgba(200,215,230,0.08);border-color:rgba(200,215,230,0.3);}
+
+/* Section base */
+section{position:relative;z-index:1;padding:130px 56px;}
+.container{max-width:1120px;margin:0 auto;}
+
+/* Depth driver */
+.scene{will-change:transform,filter,opacity;}
+
+/* Chrome Glass */
+.chrome{
+  background:rgba(180,200,220,0.04);
+  border:1px solid rgba(200,215,230,0.1);
+  backdrop-filter:blur(40px) saturate(200%) brightness(1.05);
+  -webkit-backdrop-filter:blur(40px) saturate(200%) brightness(1.05);
+  position:relative;overflow:hidden;
+}
+.chrome::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:1px;
+  background:linear-gradient(to right,transparent,rgba(255,255,255,0.2),transparent);
+}
+.chrome::after{
+  content:'';position:absolute;top:0;left:0;bottom:0;width:1px;
+  background:linear-gradient(to bottom,rgba(255,255,255,0.15),transparent);
+}
+
+/* ── HERO ── */
+#hero{min-height:100vh;display:grid;place-items:center;padding:0 56px;}
+.hero-inner{max-width:1120px;width:100%;display:grid;grid-template-columns:1fr 1fr;gap:80px;align-items:center;}
+.hero-left{}
+.hero-eyebrow{
+  display:inline-block;font-size:.68rem;font-weight:700;letter-spacing:4px;
+  text-transform:uppercase;color:var(--accent2);margin-bottom:32px;font-family:'Syne',sans-serif;
+}
+.hero-h{font-family:'Syne',sans-serif;font-size:clamp(3rem,6vw,5.5rem);font-weight:800;line-height:1.0;letter-spacing:-2px;margin-bottom:28px;}
+.hero-h em{font-style:normal;color:transparent;-webkit-text-stroke:1px rgba(255,255,255,0.3);}
+.hero-p{color:var(--muted);font-size:1rem;line-height:1.9;font-weight:300;margin-bottom:44px;max-width:420px;}
+.hero-ctas{display:flex;gap:14px;flex-wrap:wrap;}
+.cta-primary{
+  background:var(--accent);color:#fff;padding:15px 38px;font-size:.9rem;
+  font-weight:700;text-decoration:none;letter-spacing:.3px;transition:all .3s;
+  border:1px solid var(--accent);font-family:'Syne',sans-serif;
+}
+.cta-primary:hover{background:transparent;color:var(--accent);}
+.cta-sec{
+  border:1px solid rgba(200,215,230,0.18);color:var(--muted);padding:15px 38px;
+  font-size:.9rem;font-weight:500;text-decoration:none;letter-spacing:.3px;
+  transition:all .3s;font-family:'Syne',sans-serif;
+}
+.cta-sec:hover{border-color:rgba(200,215,230,0.35);color:var(--text);}
+.hero-right{position:relative;}
+
+/* Chrome ticker card */
+.ticker-card{padding:36px;border-radius:2px;}
+.ticker-header{font-family:'Syne',sans-serif;font-size:.65rem;font-weight:700;letter-spacing:3px;color:var(--muted);text-transform:uppercase;margin-bottom:28px;display:flex;align-items:center;gap:8px;}
+.ticker-dot{width:6px;height:6px;background:#00ff88;border-radius:50%;animation:tkpulse 2s infinite;}
+@keyframes tkpulse{0%,100%{opacity:1}50%{opacity:.3}}
+.metric-grid{display:flex;flex-direction:column;gap:14px;}
+.metric-line{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;background:rgba(255,255,255,0.02);border-left:2px solid rgba(200,215,230,0.08);}
+.metric-line:hover{border-left-color:var(--accent);background:rgba(79,95,255,0.05);}
+.metric-name{font-size:.8rem;color:var(--muted);font-weight:300;}
+.metric-value{font-family:'Syne',sans-serif;font-size:1.2rem;font-weight:800;color:var(--text);}
+.metric-change{font-size:.72rem;color:#4ade80;font-family:'Syne',sans-serif;margin-top:2px;}
+.floating-tag{
+  position:absolute;background:rgba(8,8,8,0.9);border:1px solid rgba(200,215,230,0.12);
+  backdrop-filter:blur(20px);padding:12px 20px;border-radius:2px;
+  font-size:.78rem;font-weight:500;display:flex;align-items:center;gap:8px;
+}
+.floating-tag.t1{top:-20px;left:-20px;animation:flt 5s ease-in-out infinite;}
+.floating-tag.t2{bottom:-16px;right:-16px;animation:flt 5s ease-in-out 2.5s infinite;}
+@keyframes flt{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+.ftdot{width:6px;height:6px;border-radius:50%;background:var(--accent);}
+
+/* Section label */
+.eyebrow{font-size:.65rem;font-weight:700;letter-spacing:4px;text-transform:uppercase;color:var(--accent2);margin-bottom:14px;font-family:'Syne',sans-serif;}
+.sh{font-family:'Syne',sans-serif;font-size:clamp(2rem,4vw,3rem);font-weight:800;letter-spacing:-1px;line-height:1.1;margin-bottom:14px;}
+.sp{color:var(--muted);font-size:.95rem;font-weight:300;line-height:1.8;}
+
+/* ── URGENCY BAND ── */
+#urgency{padding:60px 56px;min-height:auto;}
+.urgency-band{border-radius:2px;padding:60px;display:grid;grid-template-columns:1fr auto;gap:48px;align-items:center;}
+.ub-left h2{font-family:'Syne',sans-serif;font-size:clamp(1.8rem,3.5vw,2.8rem);font-weight:800;letter-spacing:-1px;line-height:1.1;margin-bottom:12px;}
+.ub-left p{color:var(--muted);font-size:.95rem;font-weight:300;line-height:1.8;max-width:520px;}
+.ub-right{display:flex;flex-direction:column;gap:16px;min-width:200px;}
+.ub-stat{text-align:right;}
+.ub-num{font-family:'Syne',sans-serif;font-size:2.4rem;font-weight:800;color:var(--accent2);}
+.ub-lbl{font-size:.75rem;color:var(--muted);margin-top:2px;}
+
+/* ── SERVICES ── */
+#services{min-height:auto;}
+.svc-header{display:grid;grid-template-columns:1fr 1fr;gap:60px;align-items:start;margin-bottom:56px;}
+.svc-header-right{display:flex;flex-direction:column;justify-content:flex-end;height:100%;}
+.svc-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:rgba(200,215,230,0.07);}
+.svc-item{
+  padding:36px 28px;background:var(--ink);
+  transition:background .3s;cursor:default;
+  border-top:2px solid transparent;
+}
+.svc-item:hover{background:rgba(79,95,255,0.05);border-top-color:var(--accent);}
+.svc-i{font-size:1.6rem;margin-bottom:20px;display:block;}
+.svc-item h4{font-family:'Syne',sans-serif;font-size:.95rem;font-weight:700;margin-bottom:10px;letter-spacing:-.2px;}
+.svc-item p{font-size:.82rem;color:var(--muted);line-height:1.7;font-weight:300;}
+.svc-num-badge{display:inline-block;font-size:.62rem;color:var(--accent);letter-spacing:2px;margin-top:14px;font-family:'Syne',sans-serif;}
+
+/* ── VISION MISSION ── */
+#vision{min-height:auto;}
+.vm-band{display:grid;grid-template-columns:1fr 1fr;gap:2px;background:rgba(200,215,230,0.07);}
+.vm-half{padding:56px;background:var(--ink);}
+.vm-tag{font-size:.62rem;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--muted);margin-bottom:20px;font-family:'Syne',sans-serif;}
+.vm-half h3{font-family:'Syne',sans-serif;font-size:1.5rem;font-weight:800;letter-spacing:-.5px;margin-bottom:16px;}
+.vm-half p{color:var(--muted);font-size:.9rem;line-height:1.9;font-weight:300;}
+
+/* ── ABOUT ── */
+#about{min-height:auto;}
+.about-layout{display:grid;grid-template-columns:auto 1fr;gap:80px;align-items:start;}
+.about-sidebar{}
+.about-sidebar h2{font-family:'Syne',sans-serif;font-size:clamp(2.5rem,4vw,4rem);font-weight:800;letter-spacing:-2px;line-height:0.95;margin-bottom:32px;writing-mode:vertical-rl;text-orientation:mixed;transform:rotate(180deg);height:380px;}
+.about-main p{color:var(--muted);font-size:.95rem;line-height:1.9;font-weight:300;margin-bottom:20px;}
+.check-list{list-style:none;margin-top:32px;display:flex;flex-direction:column;gap:12px;}
+.check-list li{display:flex;align-items:center;gap:12px;font-size:.88rem;color:var(--muted);}
+.check-list li::before{content:'';width:20px;height:1px;background:var(--accent);flex-shrink:0;}
+
+/* ── TESTIMONIALS ── */
+#testimonials{min-height:auto;}
+.testi-scroll{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;}
+.tcard{padding:36px;border-radius:2px;}
+.tcard-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:20px;}
+.tcard-stars{color:var(--accent2);font-size:.85rem;letter-spacing:2px;}
+.tcard-quote{font-size:2.5rem;color:rgba(255,255,255,0.1);line-height:1;font-family:'Syne',sans-serif;}
+.tcard p{font-size:.87rem;color:var(--muted);line-height:1.85;font-weight:300;font-style:italic;margin-bottom:24px;}
+.tcard-footer{display:flex;align-items:center;gap:12px;padding-top:20px;border-top:1px solid rgba(200,215,230,0.07);}
+.tcard-av{width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-weight:800;font-size:.85rem;flex-shrink:0;}
+.tcard-name{font-size:.85rem;font-weight:600;}
+.tcard-role{font-size:.73rem;color:var(--muted);}
+.tcard-city{font-size:.7rem;color:var(--accent3);margin-top:1px;}
+
+/* ── CONTACT ── */
+#contact{min-height:auto;}
+.contact-layout{display:grid;grid-template-columns:1fr 1.4fr;gap:80px;align-items:start;}
+.contact-left h2{font-family:'Syne',sans-serif;font-size:clamp(2rem,3.5vw,3rem);font-weight:800;letter-spacing:-1px;line-height:1.1;margin-bottom:14px;}
+.contact-left p{color:var(--muted);font-size:.93rem;font-weight:300;line-height:1.9;margin-bottom:36px;}
+.contact-info-items{display:flex;flex-direction:column;gap:16px;}
+.ci-item{display:flex;align-items:center;gap:14px;font-size:.85rem;}
+.ci-icon{width:36px;height:36px;border:1px solid rgba(200,215,230,0.1);display:flex;align-items:center;justify-content:center;font-size:.9rem;flex-shrink:0;}
+.ci-lbl{font-weight:600;display:block;font-size:.82rem;}
+.ci-val{color:var(--muted);font-size:.78rem;}
+.contact-form-wrap{padding:44px;border-radius:2px;}
+.cfl{display:flex;flex-direction:column;gap:6px;margin-bottom:16px;}
+.cfl label{font-size:.62rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--muted);font-family:'Syne',sans-serif;}
+.cfl input,.cfl select,.cfl textarea{
+  background:rgba(255,255,255,0.03);border:none;border-bottom:1px solid rgba(200,215,230,0.12);
+  padding:12px 0;color:var(--text);font-family:'Manrope',sans-serif;font-size:.9rem;font-weight:300;
+  outline:none;transition:border-color .3s;border-radius:0;
+}
+.cfl input:focus,.cfl select:focus,.cfl textarea:focus{border-bottom-color:var(--accent);}
+.cfl select option{background:#0d0d0d;}
+.cfl textarea{height:80px;resize:none;}
+.cf-row{display:grid;grid-template-columns:1fr 1fr;gap:20px;}
+.submit-c{
+  width:100%;margin-top:8px;background:var(--accent);color:#fff;border:none;
+  padding:15px;font-family:'Syne',sans-serif;font-size:.88rem;font-weight:700;
+  letter-spacing:.5px;cursor:pointer;transition:all .3s;
+}
+.submit-c:hover{background:var(--accent2);transform:translateY(-1px);}
+
+/* Footer */
+footer{
+  position:relative;z-index:1;padding:36px 56px;
+  border-top:1px solid rgba(200,215,230,0.07);background:var(--ink);
+  display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px;
+}
+.flogo{font-family:'Syne',sans-serif;font-size:1rem;font-weight:800;letter-spacing:-.2px;}
+footer p{font-size:.75rem;color:var(--muted);}
+.flinks{display:flex;gap:20px;}
+.flinks a{color:var(--muted);text-decoration:none;font-size:.75rem;transition:color .3s;}
+.flinks a:hover{color:var(--text);}
+
+/* ── SVG visual sections ── */
+.svg-panel{overflow:hidden;border:1px solid rgba(200,215,230,0.09);background:rgba(200,215,230,0.02);position:relative;}
+.svg-panel::before{content:'';display:block;height:1px;background:linear-gradient(to right,transparent,rgba(255,255,255,0.14),transparent);}
+.svg-panel object{width:100%;height:100%;display:block;border:none;}
+.vis-label{font-size:.65rem;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--accent2);margin-bottom:12px;font-family:'Syne',sans-serif;}
+.vis-title{font-family:'Syne',sans-serif;font-size:1.4rem;font-weight:800;letter-spacing:-.5px;margin-bottom:24px;}
+
+@media(max-width:900px){
+  .nav-links{display:none;}
+  section{padding:80px 24px;}
+  #urgency{padding:60px 24px;}
+  .hero-inner,.svc-header,.vm-band,.about-layout,.contact-layout,.testi-scroll,.svc-grid{grid-template-columns:1fr;}
+  .about-sidebar h2{writing-mode:initial;transform:none;height:auto;}
+  .urgency-band{grid-template-columns:1fr;padding:36px;}
+  .ub-right{flex-direction:row;flex-wrap:wrap;gap:20px;}
+  .ub-stat{text-align:left;}
+  .cf-row{grid-template-columns:1fr;}
+}
+</style>
+</head>
+<body>
+
+<div id="cur"></div>
+<div id="cur-trail"></div>
+<canvas id="bg"></canvas>
+
+<!-- Nav -->
+<nav id="nav">
+  <div class="nav-logo">AI.ConnectionsInc</div>
+  <ul class="nav-links">
+    <li><a href="#vision">Vision</a></li>
+    <li><a href="#services">Services</a></li>
+    <li><a href="#about">About</a></li>
+    <li><a href="#testimonials">Clients</a></li>
+    <li><a href="#contact" class="nav-btn">Connect</a></li>
+  </ul>
+</nav>
+
+<!-- ── HERO ── -->
+<section id="hero">
+  <div class="hero-inner">
+    <div class="hero-left scene">
+      <div class="hero-eyebrow">AI Solutions for Canadian Business</div>
+      <h1 class="hero-h">We Build<br><em>AI Fast.</em><br>You Grow.</h1>
+      <p class="hero-p">Affordable, deployable AI for Canadian SMBs. Stop watching competitors accelerate while you deliberate. We turn AI strategy into running solutions in weeks, not months.</p>
+      <div class="hero-ctas">
+        <a href="#contact" class="cta-primary">Start Now</a>
+        <a href="#services" class="cta-sec">What We Build</a>
+      </div>
+    </div>
+    <div class="hero-right scene" style="position:relative;padding:20px;">
+      <div class="chrome ticker-card">
+        <div class="ticker-header"><span class="ticker-dot"></span>Live Impact Dashboard</div>
+        <div class="metric-grid">
+          <div class="metric-line">
+            <div class="metric-name">Businesses Powered</div>
+            <div><div class="metric-value">500+</div><div class="metric-change">↑ Growing weekly</div></div>
+          </div>
+          <div class="metric-line">
+            <div class="metric-name">Avg Delivery Time</div>
+            <div><div class="metric-value">14 days</div><div class="metric-change">↑ Fastest in Canada</div></div>
+          </div>
+          <div class="metric-line">
+            <div class="metric-name">Client Satisfaction</div>
+            <div><div class="metric-value">95%</div><div class="metric-change">↑ vs 78% industry avg</div></div>
+          </div>
+          <div class="metric-line">
+            <div class="metric-name">Cost vs Enterprise</div>
+            <div><div class="metric-value">60% less</div><div class="metric-change">↑ Same quality</div></div>
+          </div>
+        </div>
+      </div>
+      <div class="floating-tag t1"><div class="ftdot"></div>New client onboarded today</div>
+      <div class="floating-tag t2"><div class="ftdot" style="background:#4ade80;"></div>🍁 Canadian-owned</div>
+    </div>
+  </div>
+</section>
+
+<!-- ── URGENCY ── -->
+<section id="urgency">
+  <div class="container">
+    <div class="chrome urgency-band scene">
+      <div class="ub-left">
+        <h2>While You Wait,<br>They're Already Ahead.</h2>
+        <p>The AI gap between early adopters and laggards is growing every quarter. Businesses that move now are locking in structural advantages that compound over time. The cost of inaction has never been higher. We exist to make sure that's not your story.</p>
+      </div>
+      <div class="ub-right">
+        <div class="ub-stat"><div class="ub-num">72%</div><div class="ub-lbl">of SMBs plan AI adoption<br>in next 12 months</div></div>
+        <div class="ub-stat"><div class="ub-num">3×</div><div class="ub-lbl">faster growth for<br>AI-adopting businesses</div></div>
+        <div class="ub-stat"><div class="ub-num">40%</div><div class="ub-lbl">average cost reduction<br>through AI automation</div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── VISION / MISSION ── -->
+<section id="vision">
+  <div class="container">
+    <div class="eyebrow">Our Purpose</div>
+    <h2 class="sh" style="margin-bottom:40px;">Vision &amp; Mission</h2>
+    <div class="vm-band scene">
+      <div class="vm-half">
+        <div class="vm-tag">01 — Vision</div>
+        <h3>A Canada Where Every Business Has AI</h3>
+        <p>To be Canada's most trusted catalyst for AI adoption — a future where every small and medium-sized business, from Halifax to Victoria, has access to the transformative power of artificial intelligence. Geography, budget, and technical complexity no longer barriers. A level playing field, powered by innovation built right here at home.</p>
+      </div>
+      <div class="vm-half" style="background:rgba(79,95,255,0.03);">
+        <div class="vm-tag">02 — Mission</div>
+        <h3>Deliver Fast. Price Fairly. Stay With You.</h3>
+        <p>To deliver fast, affordable, and practical AI-powered solutions that empower Canadian SMBs to compete, grow, and thrive in the digital economy. We build solutions that work — not just demos. We move quickly so your business doesn't wait. And we stay by your side as your business grows and the technology evolves.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── SERVICES ── -->
+<section id="services">
+  <div class="container">
+    <div class="svc-header">
+      <div class="scene">
+        <div class="eyebrow">What We Build</div>
+        <h2 class="sh" style="font-size:clamp(2rem,4vw,3.5rem);margin-bottom:0;">AI Solutions<br>That Actually Work</h2>
+      </div>
+      <div class="scene" style="padding-top:48px;">
+        <p class="sp">Practical, deployable tools built for how real Canadian businesses operate — not how enterprise textbooks say they should.</p>
+      </div>
+    </div>
+    <div class="svc-grid scene">
+      <div class="svc-item"><span class="svc-i">🤖</span><h4>Business Automation</h4><p>Eliminate repetitive tasks with AI agents that work around the clock. Invoicing, scheduling, data entry, reporting.</p><span class="svc-num-badge">01 — POPULAR</span></div>
+      <div class="svc-item"><span class="svc-i">💬</span><h4>AI Customer Experience</h4><p>Chatbots and virtual assistants that handle inquiries, bookings, and support 24/7 on any budget.</p><span class="svc-num-badge">02 — HIGH ROI</span></div>
+      <div class="svc-item"><span class="svc-i">📊</span><h4>Data Analytics &amp; Insights</h4><p>AI dashboards that surface trends, predict behaviour, and highlight opportunities hidden in your data.</p><span class="svc-num-badge">03 — FAST RESULTS</span></div>
+      <div class="svc-item"><span class="svc-i">📣</span><h4>AI-Powered Marketing</h4><p>Personalized campaigns at scale. Content generation, segmentation, email automation, ad optimization.</p><span class="svc-num-badge">04 — GROWTH DRIVER</span></div>
+      <div class="svc-item"><span class="svc-i">⚙️</span><h4>Custom AI Development</h4><p>Bespoke AI systems built for your exact industry — from predictive inventory to document processing.</p><span class="svc-num-badge">05 — CUSTOM BUILD</span></div>
+      <div class="svc-item"><span class="svc-i">🧭</span><h4>AI Strategy &amp; Consulting</h4><p>We assess your business, identify AI opportunities, and deliver a clear, actionable roadmap.</p><span class="svc-num-badge">06 — START HERE</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- ── ABOUT ── -->
+<section id="about">
+  <div class="container">
+    <div class="about-layout scene">
+      <div class="about-sidebar">
+        <h2>Built<br>For<br>Canada</h2>
+      </div>
+      <div class="about-main">
+        <div class="eyebrow">About Us</div>
+        <h2 class="sh">The AI firm that speaks<br>your language.</h2>
+        <p>AI.ConnectionsInc was founded on a simple belief: the AI revolution shouldn't be exclusive to Fortune 500 companies. We saw brilliant Canadian entrepreneurs struggling to compete while larger competitors rapidly deployed AI to gain structural advantages.</p>
+        <p>So we built a company to fix that. One that moves fast, prices fairly, and solves real business problems — not hypothetical enterprise ones. We're not here to sell you technology. We're here to grow your business.</p>
+        <p>100% Canadian-owned. PIPEDA-compliant. No lock-in contracts. Results earn your loyalty — not paper.</p>
+        <ul class="check-list">
+          <li>Solutions delivered in 2–6 weeks, not quarters</li>
+          <li>Pricing designed for SMB cash flow</li>
+          <li>90-day results guarantee with free iteration</li>
+          <li>Ongoing support and continuous optimization</li>
+          <li>Canadian data centres available on request</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── TESTIMONIALS ── -->
+<section id="testimonials">
+  <div class="container">
+    <div style="margin-bottom:48px;" class="scene">
+      <div class="eyebrow">Client Stories</div>
+      <h2 class="sh">Canadian Businesses Winning</h2>
+      <p class="sp">Real results. No enterprise budgets. No dedicated tech teams.</p>
+    </div>
+    <div class="testi-scroll scene">
+      <div class="chrome tcard">
+        <div class="tcard-top"><div class="tcard-stars">★★★★★</div><div class="tcard-quote">"</div></div>
+        <p>"Skeptical AI was for a family-owned restaurant group. AI.ConnectionsInc built us a chatbot and automated reservations in three weeks. Staff saves 15 hrs/week and satisfaction up 40%. Believers now."</p>
+        <div class="tcard-footer"><div class="tcard-av">MK</div><div><div class="tcard-name">Maria Kowalski</div><div class="tcard-role">Owner, Harvest Table Group</div><div class="tcard-city">📍 Toronto, ON</div></div></div>
+      </div>
+      <div class="chrome tcard">
+        <div class="tcard-top"><div class="tcard-stars">★★★★★</div><div class="tcard-quote">"</div></div>
+        <p>"Automated inventory forecasting and personalized email campaigns in under a month. Sales up 28% in Q1 and my team finally has time for strategy, not spreadsheets. Transformative."</p>
+        <div class="tcard-footer"><div class="tcard-av">JT</div><div><div class="tcard-name">James Tremblay</div><div class="tcard-role">CEO, NorthShore Outdoors</div><div class="tcard-city">📍 Vancouver, BC</div></div></div>
+      </div>
+      <div class="chrome tcard">
+        <div class="tcard-top"><div class="tcard-stars">★★★★★</div><div class="tcard-quote">"</div></div>
+        <p>"Document processing tool reads client files and pre-populates tax forms automatically. Processing time cut in half. Took on 30% more clients without additional staff. ROI paid off in 8 weeks."</p>
+        <div class="tcard-footer"><div class="tcard-av">PD</div><div><div class="tcard-name">Priya Desai, CPA</div><div class="tcard-role">Founder, Meridian Accounting</div><div class="tcard-city">📍 Calgary, AB</div></div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── CONTACT ── -->
+<section id="contact">
+  <div class="container">
+    <div class="contact-layout">
+      <div class="contact-left scene">
+        <div class="eyebrow">Connect With Us</div>
+        <h2>Let's Build Your AI Future Together</h2>
+        <p>Stop watching competitors pull ahead. Book a free, no-pressure consultation. Clear plan. Honest pricing. Real timeline.</p>
+        <div class="contact-info-items">
+          <div class="ci-item"><div class="ci-icon">✉</div><div><span class="ci-lbl">Email</span><span class="ci-val">hello@aiconnectionsinc.ca</span></div></div>
+          <div class="ci-item"><div class="ci-icon">📞</div><div><span class="ci-lbl">Phone</span><span class="ci-val">+1 (800) AI-CONNECT</span></div></div>
+          <div class="ci-item"><div class="ci-icon">📍</div><div><span class="ci-lbl">Location</span><span class="ci-val">Toronto, ON — Serving All Canada</span></div></div>
+          <div class="ci-item"><div class="ci-icon">⏱</div><div><span class="ci-lbl">Response</span><span class="ci-val">Within 24 hours, guaranteed</span></div></div>
+        </div>
+      </div>
+      <div class="scene">
+        <div class="chrome contact-form-wrap">
+          <div class="cf-row">
+            <div class="cfl"><label>First Name</label><input type="text" placeholder="John"></div>
+            <div class="cfl"><label>Last Name</label><input type="text" placeholder="Smith"></div>
+          </div>
+          <div class="cfl"><label>Business Email</label><input type="email" placeholder="john@yourbusiness.ca"></div>
+          <div class="cfl"><label>Business Name</label><input type="text" placeholder="Your Business Inc."></div>
+          <div class="cfl"><label>Province</label>
+            <select>
+              <option>Select your province...</option>
+              <option>Ontario</option><option>British Columbia</option><option>Alberta</option>
+              <option>Quebec</option><option>Nova Scotia</option><option>Manitoba</option>
+              <option>Saskatchewan</option><option>Other</option>
+            </select>
+          </div>
+          <div class="cfl"><label>How can we help?</label><textarea placeholder="Describe your business challenges and what you hope AI can solve..."></textarea></div>
+          <button class="submit-c" id="submitBtn">Book Free Consultation →</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="flogo">AI.ConnectionsInc</div>
+  <p>© 2025 AI.ConnectionsInc. Proudly Canadian 🍁</p>
+  <div class="flinks"><a href="#">Privacy</a><a href="#">Terms</a><a href="#">LinkedIn</a></div>
+</footer>
+
+<script>
+// ── Custom Cursor ──
+const cur = document.getElementById('cur');
+const curT = document.getElementById('cur-trail');
+let mx = 0, my = 0, tx = 0, ty = 0;
+
+document.addEventListener('mousemove', e => { mx = e.clientX; my = e.clientY; });
+
+function moveCursor() {
+  cur.style.left = mx + 'px'; cur.style.top = my + 'px';
+  tx += (mx - tx) * 0.1; ty += (my - ty) * 0.1;
+  curT.style.left = tx + 'px'; curT.style.top = ty + 'px';
+  requestAnimationFrame(moveCursor);
+}
+moveCursor();
+
+document.querySelectorAll('a,button,input,select,textarea,.svc-item,.metric-line').forEach(el => {
+  el.addEventListener('mouseenter', () => { curT.style.width = '60px'; curT.style.height = '60px'; curT.style.borderColor = 'rgba(79,95,255,0.7)'; });
+  el.addEventListener('mouseleave', () => { curT.style.width = '36px'; curT.style.height = '36px'; curT.style.borderColor = 'rgba(79,95,255,0.4)'; });
+});
+
+// ── Metallic Fluid Canvas ──
+const canvas = document.getElementById('bg');
+const ctx = canvas.getContext('2d');
+let W, H;
+
+function resize() { W = canvas.width = window.innerWidth; H = canvas.height = window.innerHeight; }
+resize(); window.addEventListener('resize', resize);
+
+// Fluid blobs
+const blobs = [
+  {x:.15,y:.2,vx:.0003,vy:.0002,r:.38,col:[60,80,110]},
+  {x:.7, y:.15,vx:-.0002,vy:.0003,r:.32,col:[80,100,140]},
+  {x:.4, y:.6,vx:.0002,vy:-.0002,r:.42,col:[40,60,90]},
+  {x:.85,y:.7,vx:-.0003,vy:-.0002,r:.28,col:[70,90,120]},
+  {x:.25,y:.75,vx:.0002,vy:.0001,r:.35,col:[50,70,100]},
+];
+
+let mouseX = 0, mouseY = 0, smx = W*.5, smy = H*.5;
+document.addEventListener('mousemove', e => { mouseX = e.clientX; mouseY = e.clientY; });
+
+function drawFluid(t) {
+  smx += (mouseX - smx) * 0.04; smy += (mouseY - smy) * 0.04;
+
+  ctx.clearRect(0, 0, W, H);
+  ctx.fillStyle = '#080808'; ctx.fillRect(0, 0, W, H);
+
+  // Draw blobs with slow drift + mouse influence
+  blobs.forEach(b => {
+    b.x += b.vx + (smx/W - b.x) * 0.00015;
+    b.y += b.vy + (smy/H - b.y) * 0.00015;
+    b.x = Math.max(0, Math.min(1, b.x));
+    b.y = Math.max(0, Math.min(1, b.y));
+
+    const bx = b.x * W, by = b.y * H;
+    const br = b.r * Math.max(W, H);
+
+    const grd = ctx.createRadialGradient(bx, by, 0, bx, by, br);
+    grd.addColorStop(0, `rgba(${b.col.join(',')},0.22)`);
+    grd.addColorStop(0.5, `rgba(${b.col.join(',')},0.1)`);
+    grd.addColorStop(1, `rgba(${b.col.join(',')},0)`);
+    ctx.fillStyle = grd;
+    ctx.beginPath(); ctx.arc(bx, by, br, 0, Math.PI*2); ctx.fill();
+  });
+
+  // Mouse glow
+  const mg = ctx.createRadialGradient(smx, smy, 0, smx, smy, 280);
+  mg.addColorStop(0, 'rgba(79,95,255,0.12)');
+  mg.addColorStop(0.5, 'rgba(79,95,255,0.04)');
+  mg.addColorStop(1, 'rgba(79,95,255,0)');
+  ctx.fillStyle = mg;
+  ctx.beginPath(); ctx.arc(smx, smy, 280, 0, Math.PI*2); ctx.fill();
+
+  // Shimmer lines
+  ctx.save();
+  ctx.globalAlpha = 0.015;
+  for (let i = 0; i < 12; i++) {
+    const angle = (t * 0.0001 + i * Math.PI / 6);
+    const cx = W/2 + Math.cos(angle * 0.7) * W * 0.35;
+    const cy = H/2 + Math.sin(angle * 0.5) * H * 0.25;
+    const lg = ctx.createLinearGradient(cx - 400, cy, cx + 400, cy);
+    lg.addColorStop(0, 'transparent');
+    lg.addColorStop(.5, 'rgba(200,215,230,1)');
+    lg.addColorStop(1, 'transparent');
+    ctx.strokeStyle = lg; ctx.lineWidth = .5;
+    ctx.beginPath(); ctx.moveTo(cx - 600, cy - 300); ctx.lineTo(cx + 600, cy + 300); ctx.stroke();
+  }
+  ctx.restore();
+}
+
+// ── Depth scroll effect ──
+function updateDepth() {
+  const vh = window.innerHeight;
+  document.querySelectorAll('.scene').forEach(el => {
+    const r = el.getBoundingClientRect();
+    const center = r.top + r.height * 0.5;
+    const dist = center - vh * 0.5;
+    const prog = Math.max(0, Math.min(1, dist / vh));
+    const scale = 1 - prog * 0.09;
+    const blur = prog * 7;
+    const opacity = 1 - prog * 0.7;
+    const ty = prog * 55;
+    el.style.transform = `translateY(${ty}px) scale(${scale})`;
+    el.style.filter = `blur(${blur}px)`;
+    el.style.opacity = opacity;
+  });
+}
+window.addEventListener('scroll', updateDepth, {passive:true});
+updateDepth();
+
+// ── Nav ──
+window.addEventListener('scroll', () => document.getElementById('nav').classList.toggle('bg', window.scrollY > 60));
+
+// ── Glass tilt ──
+document.querySelectorAll('.chrome').forEach(el => {
+  el.addEventListener('mousemove', e => {
+    const r = el.getBoundingClientRect();
+    const dx = (e.clientX - r.left - r.width/2) / (r.width/2);
+    const dy = (e.clientY - r.top - r.height/2) / (r.height/2);
+    el.style.transform = `perspective(1200px) rotateY(${dx*3}deg) rotateX(${-dy*3}deg)`;
+    el.style.transition = 'transform .1s ease';
+  });
+  el.addEventListener('mouseleave', () => {
+    el.style.transform = '';
+    el.style.transition = 'transform .6s ease';
+  });
+});
+
+// ── Render ──
+let st = null;
+(function frame(ts) {
+  if (!st) st = ts;
+  drawFluid(ts - st);
+  requestAnimationFrame(frame);
+})(performance.now());
+
+// ── Form ──
+document.getElementById('submitBtn').addEventListener('click', e => {
+  e.preventDefault();
+  const b = e.currentTarget;
+  b.textContent = '✓ Sent — we\'ll reply within 24 hours';
+  b.style.background = '#16a34a';
+  setTimeout(() => { b.textContent = 'Book Free Consultation →'; b.style.background = ''; }, 5000);
+});
+</script>
+</body>
+</html>
